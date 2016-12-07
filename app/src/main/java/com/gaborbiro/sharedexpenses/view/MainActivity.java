@@ -1,6 +1,7 @@
 package com.gaborbiro.sharedexpenses.view;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -27,6 +29,7 @@ import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.SpreadsheetException;
 import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
+import com.gaborbiro.sharedexpenses.model.Tenants;
 import com.google.api.services.sheets.v4.model.AppendValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
@@ -36,28 +39,20 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import pub.devrel.easypermissions.EasyPermissions;
 
-import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
-
-public class MainActivity extends AppCompatActivity implements MainView {
+public class MainActivity extends AppCompatActivity implements MainView, EasyPermissions.PermissionCallbacks {
 
     @InjectView(R.id.table)
     WebView outputView;
 
-    ProgressDialog progressDialog;
-
-    private static final String SORT_DATE = "date";
-    private static final String SORT_USER = "user";
-
-    private static final String DEFAULT_SORT = SORT_DATE;
+    private ProgressDialog progressDialog;
+    private int progressCount;
 
     private GoogleApiPresenter googleApiPresenter;
 
@@ -72,6 +67,8 @@ public class MainActivity extends AppCompatActivity implements MainView {
         outputView.getSettings().setJavaScriptEnabled(true);
         outputView.setWebViewClient(new WebViewClient());
         outputView.setWebChromeClient(new WebChromeClient());
+        outputView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
+        outputView.setScrollbarFadingEnabled(true);
 
         Toolbar toolbar = (Toolbar) findViewById(com.gaborbiro.sharedexpenses.R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -82,14 +79,14 @@ public class MainActivity extends AppCompatActivity implements MainView {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showNewExpenseItemDialog();
+                showCreateExpenseItemDialog();
             }
         });
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage(getString(R.string.please_wait));
 
-        getResultsFromApi();
+        getDataFromApi();
     }
 
     @Override
@@ -105,32 +102,31 @@ public class MainActivity extends AppCompatActivity implements MainView {
         switch (id) {
             case R.id.action_sort_by:
                 String newSort;
-                switch (UserPrefs.getSort(DEFAULT_SORT)) {
-                    case SORT_DATE:
-                        newSort = SORT_USER;
+                switch (UserPrefs.getSort(Constants.DEFAULT_SORT)) {
+                    case Constants.SORT_DATE:
+                        newSort = Constants.SORT_USER;
                         break;
-                    case SORT_USER:
-                        newSort = SORT_DATE;
+                    case Constants.SORT_USER:
+                        newSort = Constants.SORT_DATE;
                         break;
                     default:
-                        newSort = DEFAULT_SORT;
+                        newSort = Constants.DEFAULT_SORT;
                         break;
                 }
                 Toast.makeText(this, getString(R.string.sorting_by, newSort), Toast.LENGTH_SHORT).show();
                 UserPrefs.setSort(newSort);
-                getResultsFromApi();
+                getDataFromApi();
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    public void chooseUser() {
-        new MaterialDialog.Builder(this).items(Constants.USERS).itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
+    public void chooseTenant() {
+        new MaterialDialog.Builder(this).items(Tenants.getTenants()).itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
             @Override
             public boolean onSelection(MaterialDialog dialog, View itemView, int which, CharSequence text) {
-                UserPrefs.setUser(text.toString());
+                UserPrefs.setSelectedTenant(text.toString());
                 updateTitle();
-                getResultsFromApi();
                 return true;
             }
         }).title(R.string.who_are_you).show();
@@ -140,13 +136,14 @@ public class MainActivity extends AppCompatActivity implements MainView {
         outputView.loadData(text, "", "");
     }
 
-    public void getResultsFromApi() {
+    public void getDataFromApi() {
         if (googleApiPresenter.verifyCanDoWork()) {
             new FetchExpensesTask(this, googleApiPresenter).execute();
+            new FetchTenantNamesTask(this, googleApiPresenter).execute();
         }
     }
 
-    private void showNewExpenseItemDialog() {
+    private void showCreateExpenseItemDialog() {
         final View layout = LayoutInflater.from(MainActivity.this).inflate(R.layout.new_expense_dialog, null);
         EditText buyerField = (EditText) layout.findViewById(R.id.buyer);
         final EditText descriptionField = (EditText) layout.findViewById(R.id.description);
@@ -154,17 +151,29 @@ public class MainActivity extends AppCompatActivity implements MainView {
         final EditText commentField = (EditText) layout.findViewById(R.id.comment);
         final DatePicker datePicker = (DatePicker) layout.findViewById(R.id.date_picker);
 
-        buyerField.setText(UserPrefs.getUser());
-        buyerField.setEnabled(false);
+        String selectedTenant = UserPrefs.getSelectedTenant();
+
+        if (!TextUtils.isEmpty(selectedTenant)) {
+            buyerField.setText(selectedTenant);
+            buyerField.setEnabled(false);
+        }
 
         Calendar now = Calendar.getInstance();
         datePicker.init(now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH), null);
+
+        descriptionField.post(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(descriptionField, InputMethodManager.SHOW_IMPLICIT);
+            }
+        });
 
         new MaterialDialog.Builder(MainActivity.this).title(R.string.ad_new_expense).customView(layout, false).
                 positiveText(R.string.submit).onPositive(new MaterialDialog.SingleButtonCallback() {
             @Override
             public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                String buyer = UserPrefs.getUser();
+                String buyer = UserPrefs.getSelectedTenant();
                 String description = descriptionField.getText().toString();
 
                 if (TextUtils.isEmpty(description)) {
@@ -183,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
                 selectedDate.set(Calendar.MONTH, datePicker.getMonth());
                 selectedDate.set(Calendar.YEAR, datePicker.getYear());
                 ExpenseItem entry = new ExpenseItem(buyer, description, price, selectedDate.getTime(), comment);
-                new InsertExpenseTask(MainActivity.this, googleApiPresenter).execute(entry);
+                new InsertSheetsTask(MainActivity.this, googleApiPresenter).execute(entry);
                 dialog.dismiss();
             }
         }).negativeText(android.R.string.cancel).onNegative(new MaterialDialog.SingleButtonCallback() {
@@ -196,19 +205,29 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void showProgress() {
+        progressCount++;
         progressDialog.show();
     }
 
     @Override
     public void hideProgress() {
-        progressDialog.hide();
+        if (--progressCount <= 0) {
+            progressDialog.hide();
+            progressCount = 0;
+        }
+    }
+
+    @Override
+    public void rageQuit() {
+        Toast.makeText(this, "This app needs that permission to function", Toast.LENGTH_SHORT).show();
+        finish();
     }
 
     public void updateTitle() {
         String title = getString(R.string.app_name);
-        String user = UserPrefs.getUser();
+        String user = UserPrefs.getSelectedTenant();
         if (!TextUtils.isEmpty(user)) {
-            title += " (" + UserPrefs.getUser() + ")";
+            title += " (" + UserPrefs.getSelectedTenant() + ")";
         }
         title += " " + BuildConfig.VERSION_NAME;
         getSupportActionBar().setTitle(title);
@@ -232,178 +251,72 @@ public class MainActivity extends AppCompatActivity implements MainView {
         googleApiPresenter.onActivityResult(requestCode, resultCode, data);
     }
 
-    private static String formatOutput(ExpenseItem[] output) {
-        ExpenseItem[] copy = new ExpenseItem[output.length];
-        System.arraycopy(output, 0, copy, 0, output.length);
-
-        Arrays.sort(copy, new Comparator<ExpenseItem>() {
-            @Override
-            public int compare(ExpenseItem o1, ExpenseItem o2) {
-                int result = 0;
-                if (Objects.equals(UserPrefs.getSort(DEFAULT_SORT), SORT_USER)) {
-                    result = o2.buyer.compareTo(o1.buyer);
-
-                    if (result == 0) {
-                        if (o2.date != null && o1.date != null) {
-                            result = o2.date.compareTo(o1.date);
-                        }
-                    }
-                } else {
-                    if (o2.date != null && o1.date != null) {
-                        result = o2.date.compareTo(o1.date);
-                    }
-                }
-                if (result == 0) {
-                    result = o2.index - o1.index;
-                }
-                return result;
-            }
-        });
-        output = copy;
-
-        StringBuffer result = new StringBuffer();
-        result.append("<html>");
-        result.append("<head>" +
-                "<script>" +
-                "    function prompt(text)" +
-                "    {" +
-                "        alert(text);" +
-                "    }" +
-                "    </script>" +
-                "</head>");
-        result.append("<table>");
-        result.append("<thead>");
-        result.append("<tr>");
-        if (Objects.equals(UserPrefs.getSort(DEFAULT_SORT), SORT_USER)) {
-            result.append("<td><u>Date</u></td><td><u>Description</u></td><td><u>Price</u></td><td><u>Comment</u></td>");
-        } else {
-            result.append("<td><u>Buyer</u></td><td><u>Description</u></td><td><u>Price</u></td><td><u>Comment</u></td>");
-        }
-        result.append("</tr>");
-        result.append("</thead>");
-        result.append("<tbody>");
-
-        Date currentDate = null;
-        String currentUser = null;
-
-        for (ExpenseItem expense : output) {
-            if (TextUtils.isEmpty(expense.error)) {
-                if (Objects.equals(UserPrefs.getSort(DEFAULT_SORT), SORT_USER)) {
-                    if (expense.buyer != null && !expense.buyer.equals(currentUser)) {
-                        result.append("<tr bgcolor=\"#eeeeee\"><td colspan=\"4\" align=\"center\">");
-                        result.append(expense.buyer);
-                        result.append("</td></tr>");
-                        currentUser = expense.buyer;
-                    }
-                } else {
-                    if (expense.date != null && !expense.date.equals(currentDate)) {
-                        result.append("<tr bgcolor=\"#eeeeee\"><td colspan=\"4\" align=\"center\">");
-                        result.append(ExpenseItem.DATE_FORMAT.format(expense.date));
-                        result.append("</td></tr>");
-                        currentDate = expense.date;
-                    }
-                }
-                result.append("<tr>");
-                result.append("<td>");
-                if (Objects.equals(UserPrefs.getSort(DEFAULT_SORT), SORT_USER)) {
-                    result.append(ExpenseItem.DATE_FORMAT.format(expense.date));
-                } else {
-                    result.append(clear(expense.buyer));
-                }
-                result.append("</td>");
-                result.append("<td>");
-                result.append(clear(expense.description));
-                result.append("</td>");
-                result.append("<td>");
-                result.append(clear(expense.price));
-                result.append("</td>");
-                result.append("<td>");
-                result.append(clear(expense.comment));
-                result.append("</td>");
-                result.append("</tr>");
-            } else {
-                result.append("<tr><td colspan=\"4\">");
-                result.append("<div style=\"color:blue\" onclick=\"prompt('" + clear(expense.detailedError) + "')\"><u>" + clear(expense.error) + "</u></div>");
-                result.append("</td></tr>");
-            }
-        }
-
-        result.append("</tbody>");
-        result.append("</table>");
-        result.append("</html>");
-        return result.toString();
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        googleApiPresenter.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    private static String clear(String str) {
-        if (str == null || str.length() == 0) {
-            return "";
-        }
-        return escapeHtml4(str);
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> perms) {
+        googleApiPresenter.onPermissionsGranted(requestCode, perms);
     }
 
-    private class InsertExpenseTask extends BaseExpenseTask<ExpenseItem, AppendValuesResponse> {
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> perms) {
+        googleApiPresenter.onPermissionsDenied(requestCode, perms);
+    }
 
-        public InsertExpenseTask(MainView view, GoogleApiPresenter googleApiPresenter) {
+
+    private class InsertSheetsTask extends BaseSheetsTask<ExpenseItem, Integer> {
+
+        public InsertSheetsTask(MainView view, GoogleApiPresenter googleApiPresenter) {
             super(view, googleApiPresenter);
         }
 
-        /**
-         * Background task to call Google Sheets API.
-         *
-         * @param params no parameters needed for this task.
-         */
         @Override
-        protected AppendValuesResponse doInBackground(ExpenseItem... params) {
-            try {
-                return saveExpense(params[0]);
-            } catch (Exception e) {
-                mLastError = e;
-                cancel(true);
+        protected Integer doInBackground(ExpenseItem... params) {
+            int modifiedRowCount = 0;
+            for (ExpenseItem expense : params) {
+                try {
+                    ValueRange valueRange = new ValueRange();
+                    List<List<Object>> row = new ArrayList<>(1);
+                    List<Object> cells = new ArrayList<>(5);
+                    cells.add(expense.buyer);
+                    cells.add(expense.description);
+                    cells.add(expense.price);
+                    cells.add(ExpenseItem.DATE_FORMAT.format(expense.date));
+                    cells.add(expense.comment);
+                    row.add(cells);
+                    valueRange.setValues(row);
+                    valueRange.setRange(Constants.EXPENSES_TABLE_RANGE);
+                    AppendValuesResponse response = this.service.spreadsheets().values().
+                            append(Constants.SPREADSHEET_ID, Constants.EXPENSES_TABLE_RANGE, valueRange).setValueInputOption("USER_ENTERED").
+                            execute();
+                    modifiedRowCount += response.getUpdates().getUpdatedRows();
+                } catch (Exception e) {
+                    mLastError = e;
+                    cancel(true);
+                }
             }
-            return null;
-        }
-
-        private AppendValuesResponse saveExpense(ExpenseItem expense) throws IOException {
-            ValueRange valueRange = new ValueRange();
-            List<List<Object>> row = new ArrayList<>(1);
-            List<Object> cells = new ArrayList<>(5);
-            cells.add(expense.buyer);
-            cells.add(expense.description);
-            cells.add(expense.price);
-            cells.add(ExpenseItem.DATE_FORMAT.format(expense.date));
-            cells.add(expense.comment);
-            row.add(cells);
-            valueRange.setValues(row);
-            valueRange.setRange(Constants.SPREADSHEET_RANGE);
-            AppendValuesResponse response = this.service.spreadsheets().values().
-                    append(Constants.SPREADSHEET_ID, Constants.SPREADSHEET_RANGE, valueRange).setValueInputOption("USER_ENTERED").
-                    execute();
-            return response;
+            return modifiedRowCount;
         }
 
         @Override
-        protected void onPostExecute(AppendValuesResponse response) {
+        protected void onPostExecute(Integer response) {
             super.onPostExecute(response);
-            getResultsFromApi();
-            Toast.makeText(MainActivity.this, getString(R.string.updated, response.getUpdates().getUpdatedRange()), Toast.LENGTH_SHORT).show();
+            getDataFromApi();
+            Toast.makeText(MainActivity.this, getString(R.string.updated, response), Toast.LENGTH_SHORT).show();
         }
     }
 
-    /**
-     * An asynchronous task that handles the Google Sheets API call.
-     * Placing the API calls in their own task ensures the UI stays responsive.
-     */
-    private class FetchExpensesTask extends BaseExpenseTask<Void, ExpenseItem[]> {
+    private class FetchExpensesTask extends BaseSheetsTask<Void, ExpenseItem[]> {
 
         public FetchExpensesTask(MainView view, GoogleApiPresenter googleApiPresenter) {
             super(view, googleApiPresenter);
         }
 
-        /**
-         * Background task to call Google Sheets API.
-         *
-         * @param params no parameters needed for this task.
-         */
         @Override
         protected ExpenseItem[] doInBackground(Void... params) {
             try {
@@ -415,17 +328,10 @@ public class MainActivity extends AppCompatActivity implements MainView {
             }
         }
 
-        /**
-         * Fetch a list of names and majors of students in a sample spreadsheet:
-         * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
-         *
-         * @return List of names and majors
-         * @throws IOException
-         */
         private ExpenseItem[] getDataFromApi() throws IOException {
             List<ExpenseItem> results = new ArrayList<>();
             ValueRange response = this.service.spreadsheets().values()
-                    .get(Constants.SPREADSHEET_ID, Constants.SPREADSHEET_RANGE)
+                    .get(Constants.SPREADSHEET_ID, Constants.EXPENSES_TABLE_RANGE)
                     .execute();
             List<List<Object>> values = response.getValues();
             if (values != null && values.size() > 1) {
@@ -433,13 +339,9 @@ public class MainActivity extends AppCompatActivity implements MainView {
                     ExpenseItem.Builder builder = new ExpenseItem.Builder(values.get(0));
 
                     for (int i = 1; i < values.size(); i++) {
-                        try {
-                            List<Object> row = values.get(i);
-                            if (row.size() > 3) {
-                                results.add(builder.get(i - 1, row));
-                            }
-                        } catch (ParseException e) {
-                            results.add(builder.get(i - 1, "Parse error. Tap for details", e.getMessage()));
+                        List<Object> row = values.get(i);
+                        if (row.size() > 3) {
+                            results.add(builder.get(i - 1, row));
                         }
                     }
                 } catch (SpreadsheetException e) {
@@ -455,7 +357,41 @@ public class MainActivity extends AppCompatActivity implements MainView {
             if (output == null || output.length == 0) {
                 setOutput("Empty");
             } else {
-                setOutput(formatOutput(output));
+                setOutput(HtmlUtil.getHtmlTableFromExpense(output));
+            }
+        }
+    }
+
+    private class FetchTenantNamesTask extends BaseSheetsTask<Void, String[]> {
+
+        public FetchTenantNamesTask(MainView view, GoogleApiPresenter googleApiPresenter) {
+            super(view, googleApiPresenter);
+        }
+
+        @Override
+        protected String[] doInBackground(Void... params) {
+            String[] result = {};
+            try {
+                List<List<Object>> values = this.service.spreadsheets().values().get(Constants.SPREADSHEET_ID, Constants.TENANTS_TABLE_RANGE).execute().getValues();
+                result = new String[values.size()];
+
+                for (int i = 0; i < values.size(); i++) {
+                    result[i] = values.get(i).get(0).toString();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String[] response) {
+            super.onPostExecute(response);
+            Tenants.setTenants(response);
+
+            String selectedTenant = UserPrefs.getSelectedTenant();
+            if (TextUtils.isEmpty(selectedTenant) || !TextUtils.isEmpty(selectedTenant) && Arrays.binarySearch(Tenants.getTenants(), selectedTenant) < 0) {
+                chooseTenant();
             }
         }
     }

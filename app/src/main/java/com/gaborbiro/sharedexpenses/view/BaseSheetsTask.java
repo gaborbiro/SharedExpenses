@@ -10,14 +10,14 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
-public abstract class BaseExpenseTask<I, O> extends AsyncTask<I, Void, O> {
+public abstract class BaseSheetsTask<I, O> extends AsyncTask<I, Void, O> {
 
     private MainView view;
     private GoogleApiPresenter googleApiPresenter;
     com.google.api.services.sheets.v4.Sheets service = null;
     Exception mLastError = null;
 
-    public BaseExpenseTask(MainView view, GoogleApiPresenter googleApiPresenter) {
+    public BaseSheetsTask(MainView view, GoogleApiPresenter googleApiPresenter) {
         this.view = view;
         this.googleApiPresenter = googleApiPresenter;
         this.service = getSheetsService();

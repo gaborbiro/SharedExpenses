@@ -4,7 +4,7 @@ import com.gaborbiro.sharedexpenses.util.PrefsUtil;
 
 public class UserPrefs {
     private static final String PREF_ACCOUNT_NAME = "com.gaborbiro.sharedexpenses.util.PREF_ACCOUNT_NAME";
-    private static final String PREF_USER = "com.gaborbiro.sharedexpenses.util.PREF_USER";
+    private static final String PREF_SELECTED_TENANT = "com.gaborbiro.sharedexpenses.util.PREF_SELECTED_TENANT";
     private static final String PREF_SORT = "com.gaborbiro.sharedexpenses.util.PREF_SORT";
 
     public static String getAccountName() {
@@ -15,12 +15,12 @@ public class UserPrefs {
         PrefsUtil.put(PREF_ACCOUNT_NAME, name);
     }
 
-    public static String getUser() {
-        return PrefsUtil.get(PREF_USER, (String) null);
+    public static String getSelectedTenant() {
+        return PrefsUtil.get(PREF_SELECTED_TENANT, (String) null);
     }
 
-    public static void setUser(String user) {
-        PrefsUtil.put(PREF_USER, user);
+    public static void setSelectedTenant(String tenant) {
+        PrefsUtil.put(PREF_SELECTED_TENANT, tenant);
     }
 
     public static String getSort(String default_) {

@@ -6,13 +6,13 @@ public interface MainView {
 
     void setOutput(String text);
 
-    void getResultsFromApi();
-
-    void chooseUser();
+    void getDataFromApi();
 
     void startActivityForResult(Intent intent, int requestCode);
 
     void showProgress();
 
     void hideProgress();
+
+    void rageQuit();
 }

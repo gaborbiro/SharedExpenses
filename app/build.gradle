@@ -9,8 +9,8 @@ android {
         applicationId "com.gaborbiro.sharedexpenses"
         minSdkVersion 21
         targetSdkVersion 24
-        versionCode 1
-        versionName "1.0"
+        versionCode 1001
+        versionName "1.1"
         vectorDrawables.generatedDensities = ['xxhdpi']
     }
     buildTypes {
@@ -28,9 +28,8 @@ android {
         }
         applicationVariants.all { variant ->
             variant.outputs.each { output ->
-                def date = new SimpleDateFormat("yyyyMMdd_HHmm").format(new Date())
                 def version = variant.versionName + "(" + variant.versionCode + ")"
-                def apkPostfix = "-" + version + "-" + date + ".apk"
+                def apkPostfix = "-" + version + ".apk"
                 output.outputFile = new File(
                         output.outputFile.parent,
                         output.outputFile.name.replace(".apk", apkPostfix))

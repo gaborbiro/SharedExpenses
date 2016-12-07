@@ -1,7 +1,5 @@
 package com.gaborbiro.sharedexpenses.model;
 
-import android.text.TextUtils;
-
 import com.gaborbiro.sharedexpenses.SpreadsheetException;
 
 import java.text.ParseException;
@@ -16,43 +14,43 @@ public class ExpenseItem {
     private static final String COLUMN_DATE = "Date";
     private static final String COLUMN_COMMENT = "Comment";
 
-    public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
+    public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yy");
 
     public final int index;
     public final String buyer;
     public final String description;
     public final String price;
     public final Date date;
+    public final String dateString;
     public final String comment;
-    public String error;
-    public String detailedError;
-
-    private ExpenseItem(int index, String error, String detailedError) {
-        this(index, null, null, null, null, null, error, detailedError);
-    }
 
     public ExpenseItem(String buyer, String description, String price, Date date, String comment) {
-        this(-1, buyer, description, price, date, comment, null, null);
+        this(-1, buyer, description, price, date, comment);
     }
 
-    public ExpenseItem(int index, String buyer, String description, String price, Date date, String comment, String error, String detailedError) {
+    public ExpenseItem(int index, String buyer, String description, String price, Date date, String comment) {
         this.index = index;
         this.buyer = buyer;
         this.description = description;
         this.price = price;
         this.date = date;
+        this.dateString = null;
         this.comment = comment;
-        this.error = error;
-        this.detailedError = detailedError;
+    }
+
+    public ExpenseItem(int index, String buyer, String description, String price, String date, String comment) {
+        this.index = index;
+        this.buyer = buyer;
+        this.description = description;
+        this.price = price;
+        this.date = null;
+        this.dateString = date;
+        this.comment = comment;
     }
 
     @Override
     public String toString() {
-        if (TextUtils.isEmpty(error)) {
-            return buyer + " " + description + " " + price + " " + DATE_FORMAT.format(date) + " " + comment;
-        } else {
-            return error;
-        }
+        return buyer + " " + description + " " + price + " " + (date != null ? DATE_FORMAT.format(date) : dateString) + " " + comment;
     }
 
     public static class Builder {
@@ -102,21 +100,27 @@ public class ExpenseItem {
             }
         }
 
-        public ExpenseItem get(int index, List<Object> row) throws ParseException {
+        public ExpenseItem get(int index, List<Object> row) {
             String buyer = row.get(indexBuyer).toString();
             String description = row.get(indexDescription).toString();
             String price = row.get(indexPrice).toString();
-            Date date = DATE_FORMAT.parse(row.get(indexDate).toString());
+            Date date = null;
+            String dateString = null;
+            try {
+                date = DATE_FORMAT.parse(row.get(indexDate).toString());
+            } catch (ParseException e) {
+                dateString = row.get(indexDate).toString();
+            }
             String comment = null;
 
             if (row.size() > 4) {
                 comment = row.get(indexComment).toString();
             }
-            return new ExpenseItem(index, buyer, description, price, date, comment, null, null);
-        }
-
-        public ExpenseItem get(int index, String error, String detailedError) {
-            return new ExpenseItem(index, error, detailedError);
+            if (date == null) {
+                return new ExpenseItem(index, buyer, description, price, dateString, comment);
+            } else {
+                return new ExpenseItem(index, buyer, description, price, date, comment);
+            }
         }
     }
 }

@@ -22,7 +22,7 @@ import java.util.List;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class GoogleApiPresenter implements EasyPermissions.PermissionCallbacks {
+public class GoogleApiPresenter {
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
@@ -108,7 +108,7 @@ public class GoogleApiPresenter implements EasyPermissions.PermissionCallbacks {
                             "This app requires Google Play Services. Please install " +
                                     "Google Play Services on your device and relaunch this app.");
                 } else {
-                    view.getResultsFromApi();
+                    view.getDataFromApi();
                 }
                 break;
             case REQUEST_ACCOUNT_PICKER:
@@ -119,13 +119,13 @@ public class GoogleApiPresenter implements EasyPermissions.PermissionCallbacks {
                     if (accountName != null) {
                         UserPrefs.setAccountName(accountName);
                         credential.setSelectedAccountName(accountName);
-                        view.getResultsFromApi();
+                        view.getDataFromApi();
                     }
                 }
                 break;
             case REQUEST_AUTHORIZATION:
                 if (resultCode == Activity.RESULT_OK) {
-                    view.getResultsFromApi();
+                    view.getDataFromApi();
                 }
                 break;
         }
@@ -147,7 +147,7 @@ public class GoogleApiPresenter implements EasyPermissions.PermissionCallbacks {
             String accountName = UserPrefs.getAccountName();
             if (accountName != null) {
                 credential.setSelectedAccountName(accountName);
-                view.getResultsFromApi();
+                view.getDataFromApi();
             } else {
                 // Start a dialog from which the user can choose an account
                 view.startActivityForResult(
@@ -157,7 +157,7 @@ public class GoogleApiPresenter implements EasyPermissions.PermissionCallbacks {
         } else {
             // Request the GET_ACCOUNTS permission via a user dialog
             EasyPermissions.requestPermissions(
-                    this,
+                    activity,
                     "This app needs to access your Google account (via Contacts).",
                     REQUEST_PERMISSION_GET_ACCOUNTS,
                     Manifest.permission.GET_ACCOUNTS);
@@ -186,9 +186,6 @@ public class GoogleApiPresenter implements EasyPermissions.PermissionCallbacks {
         } else if (getSelectedAccountName() == null) {
             chooseAccount();
             return false;
-        } else if (UserPrefs.getUser() == null) {
-            view.chooseUser();
-            return false;
         } else if (!ConnectivityUtil.isDeviceOnline()) {
             view.setOutput("No network connection available.");
             return false;
@@ -208,12 +205,10 @@ public class GoogleApiPresenter implements EasyPermissions.PermissionCallbacks {
      * @param grantResults The grant results for the corresponding permissions
      *                     which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
      */
-    @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        EasyPermissions.onRequestPermissionsResult(
-                requestCode, permissions, grantResults, this);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, activity);
     }
 
     /**
@@ -224,9 +219,8 @@ public class GoogleApiPresenter implements EasyPermissions.PermissionCallbacks {
      *                    permission
      * @param list        The requested permission list. Never null.
      */
-    @Override
     public void onPermissionsGranted(int requestCode, List<String> list) {
-        // Do nothing.
+        view.getDataFromApi();
     }
 
     /**
@@ -237,9 +231,8 @@ public class GoogleApiPresenter implements EasyPermissions.PermissionCallbacks {
      *                    permission
      * @param list        The requested permission list. Never null.
      */
-    @Override
     public void onPermissionsDenied(int requestCode, List<String> list) {
-        // Do nothing.
+        view.rageQuit();
     }
 
     // end EasyPermissions.PermissionCallbacks implementation
