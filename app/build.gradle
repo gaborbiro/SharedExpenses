@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+import java.text.SimpleDateFormat
+
 android {
     compileSdkVersion 24
     buildToolsVersion "25.0.0"
@@ -9,12 +11,30 @@ android {
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables.generatedDensities = ['xxhdpi']
     }
     buildTypes {
-        release {
+        debug {
             minifyEnabled false
+            useProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            applicationIdSuffix ".debug"
+        }
+        release {
+            minifyEnabled true
+            useProguard true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            applicationIdSuffix ".release"
+        }
+        applicationVariants.all { variant ->
+            variant.outputs.each { output ->
+                def date = new SimpleDateFormat("yyyyMMdd_HHmm").format(new Date())
+                def version = variant.versionName + "(" + variant.versionCode + ")"
+                def apkPostfix = "-" + version + "-" + date + ".apk"
+                output.outputFile = new File(
+                        output.outputFile.parent,
+                        output.outputFile.name.replace(".apk", apkPostfix))
+            }
         }
     }
 }

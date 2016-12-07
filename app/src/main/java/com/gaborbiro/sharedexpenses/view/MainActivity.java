@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.gaborbiro.sharedexpenses.BuildConfig;
 import com.gaborbiro.sharedexpenses.Constants;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.SpreadsheetException;
@@ -39,6 +40,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -208,6 +210,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
         if (!TextUtils.isEmpty(user)) {
             title += " (" + UserPrefs.getUser() + ")";
         }
+        title += " " + BuildConfig.VERSION_NAME;
         getSupportActionBar().setTitle(title);
     }
 
@@ -237,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
             @Override
             public int compare(ExpenseItem o1, ExpenseItem o2) {
                 int result = 0;
-                if (UserPrefs.getSort(DEFAULT_SORT) == SORT_USER) {
+                if (Objects.equals(UserPrefs.getSort(DEFAULT_SORT), SORT_USER)) {
                     result = o2.buyer.compareTo(o1.buyer);
 
                     if (result == 0) {
@@ -271,7 +274,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
         result.append("<table>");
         result.append("<thead>");
         result.append("<tr>");
-        if (UserPrefs.getSort(DEFAULT_SORT) == SORT_USER) {
+        if (Objects.equals(UserPrefs.getSort(DEFAULT_SORT), SORT_USER)) {
             result.append("<td><u>Date</u></td><td><u>Description</u></td><td><u>Price</u></td><td><u>Comment</u></td>");
         } else {
             result.append("<td><u>Buyer</u></td><td><u>Description</u></td><td><u>Price</u></td><td><u>Comment</u></td>");
@@ -285,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
         for (ExpenseItem expense : output) {
             if (TextUtils.isEmpty(expense.error)) {
-                if (UserPrefs.getSort(DEFAULT_SORT) == SORT_USER) {
+                if (Objects.equals(UserPrefs.getSort(DEFAULT_SORT), SORT_USER)) {
                     if (expense.buyer != null && !expense.buyer.equals(currentUser)) {
                         result.append("<tr bgcolor=\"#eeeeee\"><td colspan=\"4\" align=\"center\">");
                         result.append(expense.buyer);
@@ -302,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
                 }
                 result.append("<tr>");
                 result.append("<td>");
-                if (UserPrefs.getSort(DEFAULT_SORT) == SORT_USER) {
+                if (Objects.equals(UserPrefs.getSort(DEFAULT_SORT), SORT_USER)) {
                     result.append(ExpenseItem.DATE_FORMAT.format(expense.date));
                 } else {
                     result.append(clear(expense.buyer));
