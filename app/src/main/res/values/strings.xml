@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Shared Expenses</string>
+    <string name="sort_by">Sort by</string>
+    <string name="buyer">Buyer</string>
+    <string name="description">Description</string>
+    <string name="price">Price</string>
+    <string name="date">Date</string>
+    <string name="comment">Comment</string>
+
+    <string name="ad_new_expense">Add a new expense</string>
+    <string name="submit">Submit</string>
+
+    <string name="error_description">Please specify the description!</string>
+    <string name="error_price">Please specify the price!</string>
+    <string name="please_wait">Please wait…</string>
+    <string name="sorting_by">Sorting by %1$s</string>
+    <string name="updated">Updated: %1$s</string>
+    <string name="who_are_you">Who are you?</string>
+</resources>

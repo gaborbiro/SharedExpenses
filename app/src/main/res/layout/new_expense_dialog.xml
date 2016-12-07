@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingLeft="8dp"
+    android:paddingRight="8dp">
+
+    <EditText
+        android:id="@+id/buyer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:ellipsize="end"
+        android:hint="@string/buyer"
+        android:inputType="textPersonName"
+        android:lines="1" />
+
+    <EditText
+        android:id="@+id/description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:ellipsize="end"
+        android:hint="@string/description"
+        android:inputType="textAutoComplete|textCapWords">
+
+        <requestFocus />
+    </EditText>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/fab_margin">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="£" />
+
+        <EditText
+            android:id="@+id/price"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:ellipsize="end"
+            android:hint="@string/price"
+            android:inputType="numberDecimal"
+            android:lines="1" />
+    </LinearLayout>
+
+    <DatePicker
+        android:id="@+id/date_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:calendarViewShown="false"
+        android:datePickerMode="spinner" />
+
+    <EditText
+        android:id="@+id/comment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:ellipsize="end"
+        android:hint="@string/comment"
+        android:inputType="textMultiLine|textCapSentences" />
+</LinearLayout>
