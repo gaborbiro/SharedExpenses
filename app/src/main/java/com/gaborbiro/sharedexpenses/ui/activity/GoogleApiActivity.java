@@ -1,15 +1,23 @@
-package com.gaborbiro.sharedexpenses.view;
+package com.gaborbiro.sharedexpenses.ui.activity;
 
 import android.Manifest;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.Toast;
 
 import com.gaborbiro.sharedexpenses.App;
+import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.UserPrefs;
-import com.gaborbiro.sharedexpenses.util.ConnectivityUtil;
+import com.gaborbiro.sharedexpenses.ui.presenter.GoogleApiPresenter;
+import com.gaborbiro.sharedexpenses.ui.screen.GoogleApiScreen;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -22,26 +30,66 @@ import java.util.List;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class GoogleApiPresenter {
+public abstract class GoogleApiActivity extends AppCompatActivity implements GoogleApiScreen, EasyPermissions.PermissionCallbacks {
 
-    static final int REQUEST_ACCOUNT_PICKER = 1000;
-    static final int REQUEST_AUTHORIZATION = 1001;
-    private static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
+    public static final int REQUEST_ACCOUNT_PICKER = 1000;
+    public static final int REQUEST_AUTHORIZATION = 1001;
+    public static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
+    public static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
-    private static final String[] SCOPES = {SheetsScopes.SPREADSHEETS};
+    public static final String[] SCOPES = {SheetsScopes.SPREADSHEETS};
 
-    private MainView view;
-    private Activity activity;
-    private GoogleAccountCredential credential;
+    GoogleAccountCredential credential;
 
-    public GoogleApiPresenter(MainView view, Activity activity) {
-        this.view = view;
-        this.activity = activity;
+    GoogleApiPresenter googleApiPresenter;
+
+    private ProgressDialog progressDialog;
+    private int progressCount;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.googleApiPresenter = new GoogleApiPresenter(this);
         // Initialize credentials and service object.
-        credential = GoogleAccountCredential.usingOAuth2(
-                App.getAppContext(), Arrays.asList(SCOPES))
+        credential = GoogleAccountCredential.usingOAuth2(App.getAppContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage(getString(R.string.please_wait));
+    }
+
+    @Override
+    public void showProgress() {
+        progressCount++;
+        progressDialog.show();
+    }
+
+    @Override
+    public void hideProgress() {
+        if (--progressCount <= 0) {
+            progressDialog.hide();
+            progressCount = 0;
+        }
+    }
+
+    @Override
+    public void toast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void toast(@StringRes int message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void toast(@StringRes int message, Object... formatArgs) {
+        toast(getString(message, formatArgs));
+    }
+
+    @Override
+    public void requestAuthorization(Intent intent) {
+        startActivityForResult(intent, GoogleApiActivity.REQUEST_AUTHORIZATION);
     }
 
     /**
@@ -50,9 +98,9 @@ public class GoogleApiPresenter {
      * @return true if Google Play Services is available and up to
      * date on this device; false otherwise.
      */
+    @Override
     public boolean isGooglePlayServicesAvailable() {
-        GoogleApiAvailability apiAvailability =
-                GoogleApiAvailability.getInstance();
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
         final int connectionStatusCode =
                 apiAvailability.isGooglePlayServicesAvailable(App.getAppContext());
         return connectionStatusCode == ConnectionResult.SUCCESS;
@@ -62,15 +110,26 @@ public class GoogleApiPresenter {
      * Attempt to resolve a missing, out-of-date, invalid or disabled Google
      * Play Services installation via a user dialog, if possible.
      */
+    @Override
     public void acquireGooglePlayServices() {
-        GoogleApiAvailability apiAvailability =
-                GoogleApiAvailability.getInstance();
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
         final int connectionStatusCode =
                 apiAvailability.isGooglePlayServicesAvailable(App.getAppContext());
         if (apiAvailability.isUserResolvableError(connectionStatusCode)) {
             showGooglePlayServicesAvailabilityErrorDialog(connectionStatusCode);
         }
     }
+
+    @Override
+    public String getSelectedAccountName() {
+        return credential.getSelectedAccountName();
+    }
+
+    private void setSelectedAccountName(String selectedAccountName) {
+        credential.setSelectedAccountName(selectedAccountName);
+    }
+
+    public abstract void onPermissionsGranted();
 
     /**
      * Display an error dialog showing that Google Play Services is missing
@@ -79,13 +138,48 @@ public class GoogleApiPresenter {
      * @param connectionStatusCode code describing the presence (or lack of)
      *                             Google Play Services on this device.
      */
+    @Override
     public void showGooglePlayServicesAvailabilityErrorDialog(final int connectionStatusCode) {
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
         Dialog dialog = apiAvailability.getErrorDialog(
-                activity,
+                this,
                 connectionStatusCode,
                 REQUEST_GOOGLE_PLAY_SERVICES);
         dialog.show();
+    }
+
+    /**
+     * Attempts to set the account used with the API credentials. If an account
+     * name was previously saved it will use that one; otherwise an account
+     * picker dialog will be shown to the user. Note that the setting the
+     * account to use with the credentials object requires the app to have the
+     * GET_ACCOUNTS permission, which is requested here if it is not already
+     * present. The AfterPermissionGranted annotation indicates that this
+     * function will be rerun automatically whenever the GET_ACCOUNTS permission
+     * is granted.
+     */
+    @Override
+    @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
+    public void chooseGoogleAccount() {
+        if (EasyPermissions.hasPermissions(App.getAppContext(), Manifest.permission.GET_ACCOUNTS)) {
+            String accountName = UserPrefs.getAccountName();
+            if (accountName != null) {
+                setSelectedAccountName(accountName);
+                onPermissionsGranted();
+            } else {
+                // Start a dialog from which the user can choose an account
+                startActivityForResult(
+                        credential.newChooseAccountIntent(),
+                        REQUEST_ACCOUNT_PICKER);
+            }
+        } else {
+            // Request the GET_ACCOUNTS permission via a user dialog
+            EasyPermissions.requestPermissions(
+                    this,
+                    "This app needs to access your Google account (via Contacts).",
+                    REQUEST_PERMISSION_GET_ACCOUNTS,
+                    Manifest.permission.GET_ACCOUNTS);
+        }
     }
 
     /**
@@ -100,15 +194,16 @@ public class GoogleApiPresenter {
      *                    activity result.
      * @return true if the result was processed, false otherwise
      */
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != Activity.RESULT_OK) {
-                    view.setOutput(
+                    error(
                             "This app requires Google Play Services. Please install " +
                                     "Google Play Services on your device and relaunch this app.");
                 } else {
-                    view.getDataFromApi();
+                    onPermissionsGranted();
                 }
                 break;
             case REQUEST_ACCOUNT_PICKER:
@@ -118,79 +213,16 @@ public class GoogleApiPresenter {
                             data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
                     if (accountName != null) {
                         UserPrefs.setAccountName(accountName);
-                        credential.setSelectedAccountName(accountName);
-                        view.getDataFromApi();
+                        setSelectedAccountName(accountName);
+                        onPermissionsGranted();
                     }
                 }
                 break;
             case REQUEST_AUTHORIZATION:
                 if (resultCode == Activity.RESULT_OK) {
-                    view.getDataFromApi();
+                    onPermissionsGranted();
                 }
                 break;
-        }
-    }
-
-    /**
-     * Attempts to set the account used with the API credentials. If an account
-     * name was previously saved it will use that one; otherwise an account
-     * picker dialog will be shown to the user. Note that the setting the
-     * account to use with the credentials object requires the app to have the
-     * GET_ACCOUNTS permission, which is requested here if it is not already
-     * present. The AfterPermissionGranted annotation indicates that this
-     * function will be rerun automatically whenever the GET_ACCOUNTS permission
-     * is granted.
-     */
-    @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
-    public void chooseAccount() {
-        if (EasyPermissions.hasPermissions(App.getAppContext(), Manifest.permission.GET_ACCOUNTS)) {
-            String accountName = UserPrefs.getAccountName();
-            if (accountName != null) {
-                credential.setSelectedAccountName(accountName);
-                view.getDataFromApi();
-            } else {
-                // Start a dialog from which the user can choose an account
-                view.startActivityForResult(
-                        credential.newChooseAccountIntent(),
-                        REQUEST_ACCOUNT_PICKER);
-            }
-        } else {
-            // Request the GET_ACCOUNTS permission via a user dialog
-            EasyPermissions.requestPermissions(
-                    activity,
-                    "This app needs to access your Google account (via Contacts).",
-                    REQUEST_PERMISSION_GET_ACCOUNTS,
-                    Manifest.permission.GET_ACCOUNTS);
-        }
-    }
-
-    public String getSelectedAccountName() {
-        return credential.getSelectedAccountName();
-    }
-
-    public GoogleAccountCredential getCredential() {
-        return credential;
-    }
-
-    /**
-     * Verifying that all the preconditions are satisfied to call the API.
-     * The preconditions are: Google Play Services installed, an
-     * account was selected and the device currently has online access. If any
-     * of the preconditions are not satisfied, the app will prompt the user as
-     * appropriate.
-     */
-    public boolean verifyCanDoWork() {
-        if (!isGooglePlayServicesAvailable()) {
-            acquireGooglePlayServices();
-            return false;
-        } else if (getSelectedAccountName() == null) {
-            chooseAccount();
-            return false;
-        } else if (!ConnectivityUtil.isDeviceOnline()) {
-            view.setOutput("No network connection available.");
-            return false;
-        } else {
-            return true;
         }
     }
 
@@ -205,10 +237,11 @@ public class GoogleApiPresenter {
      * @param grantResults The grant results for the corresponding permissions
      *                     which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
      */
+    @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, activity);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
     /**
@@ -217,10 +250,11 @@ public class GoogleApiPresenter {
      *
      * @param requestCode The request code associated with the requested
      *                    permission
-     * @param list        The requested permission list. Never null.
+     * @param perms       The requested permission list. Never null.
      */
-    public void onPermissionsGranted(int requestCode, List<String> list) {
-        view.getDataFromApi();
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> perms) {
+        onPermissionsGranted();
     }
 
     /**
@@ -229,10 +263,12 @@ public class GoogleApiPresenter {
      *
      * @param requestCode The request code associated with the requested
      *                    permission
-     * @param list        The requested permission list. Never null.
+     * @param perms       The requested permission list. Never null.
      */
-    public void onPermissionsDenied(int requestCode, List<String> list) {
-        view.rageQuit();
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> perms) {
+        toast("This app needs that permission to function");
+        finish();
     }
 
     // end EasyPermissions.PermissionCallbacks implementation

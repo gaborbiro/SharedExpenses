@@ -1,4 +1,4 @@
-package com.gaborbiro.sharedexpenses.view;
+package com.gaborbiro.sharedexpenses.ui;
 
 import android.text.TextUtils;
 
