@@ -10,7 +10,6 @@ import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
-import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.gaborbiro.sharedexpenses.BuildConfig;
@@ -21,7 +20,6 @@ import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.model.Tenants;
 import com.gaborbiro.sharedexpenses.tasks.FetchExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.FetchTenantNamesTask;
-import com.gaborbiro.sharedexpenses.tasks.UpdateExpenseTask;
 import com.gaborbiro.sharedexpenses.ui.HtmlUtil;
 import com.gaborbiro.sharedexpenses.ui.presenter.MainPresenter;
 import com.gaborbiro.sharedexpenses.ui.screen.MainScreen;

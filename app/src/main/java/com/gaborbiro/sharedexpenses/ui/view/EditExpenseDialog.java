@@ -15,8 +15,9 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
+import com.gaborbiro.sharedexpenses.tasks.DeleteExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.InsertExpensesTask;
-import com.gaborbiro.sharedexpenses.tasks.UpdateExpenseTask;
+import com.gaborbiro.sharedexpenses.tasks.UpdateExpensesTask;
 import com.gaborbiro.sharedexpenses.ui.screen.MainScreen;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
@@ -67,13 +68,13 @@ public class EditExpenseDialog extends MaterialDialog {
             this(context, screen, credential, null);
         }
 
-        public Builder(@NonNull Context context, final MainScreen screen, final GoogleAccountCredential credential, ExpenseItem expenseItem) {
+        public Builder(@NonNull Context context, final MainScreen screen, final GoogleAccountCredential credential, final ExpenseItem expenseItem) {
             super(context);
             this.expenseItem = expenseItem;
             this.screen = screen;
             this.credential = credential;
 
-            layout = LayoutInflater.from(context).inflate(R.layout.new_expense_dialog, null);
+            layout = LayoutInflater.from(context).inflate(R.layout.expense_details_dialog, null);
             descriptionField = (EditText) layout.findViewById(R.id.description);
             priceField = (EditText) layout.findViewById(R.id.price);
             currencyField = (TextView) layout.findViewById(R.id.currency);
@@ -104,13 +105,24 @@ public class EditExpenseDialog extends MaterialDialog {
                     onSubmitDialog(dialog);
                 }
             });
-            negativeText(android.R.string.cancel);
-            onNegative(new MaterialDialog.SingleButtonCallback() {
+            neutralText(android.R.string.cancel);
+            onNeutral(new MaterialDialog.SingleButtonCallback() {
                 @Override
                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                     dialog.dismiss();
                 }
             });
+            if (expenseItem != null) {
+                negativeText(R.string.delete);
+                onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        new DeleteExpensesTask(screen, credential).execute(expenseItem);
+                        dialog.dismiss();
+                    }
+                });
+
+            }
             autoDismiss(false);
 
             Calendar now = Calendar.getInstance();
@@ -158,11 +170,12 @@ public class EditExpenseDialog extends MaterialDialog {
                 new InsertExpensesTask(screen, credential).execute(entry);
             } else {
                 String[] currencyPrice = splitCurrency(expenseItem.price);
+                currencyPrice[0] = currency;
                 currencyPrice[1] = price;
                 ExpenseItem entry = new ExpenseItem(expenseItem.index, expenseItem.buyer, description, concat(currencyPrice), selectedDate.getTime(), comment);
 
                 if (!entry.equals(expenseItem)) {
-                    new UpdateExpenseTask(screen, credential).execute(entry);
+                    new UpdateExpensesTask(screen, credential).execute(entry);
                 } else {
                     screen.toast(R.string.nothing_changed);
                 }

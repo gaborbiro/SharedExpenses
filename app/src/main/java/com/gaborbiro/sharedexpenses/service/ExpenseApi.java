@@ -11,4 +11,6 @@ public interface ExpenseApi {
     void insertExpense(ExpenseItem expense) throws IOException;
 
     void updateExpense(ExpenseItem expense) throws IOException;
+
+    void deleteExpense(int index) throws IOException;
 }

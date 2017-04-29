@@ -5,9 +5,9 @@ import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.ui.screen.MainScreen;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
-public class UpdateExpenseTask extends BaseSheetsTask<ExpenseItem, Integer> {
+public class UpdateExpensesTask extends BaseSheetsTask<ExpenseItem, Integer> {
 
-    public UpdateExpenseTask(MainScreen screen, GoogleAccountCredential credential) {
+    public UpdateExpensesTask(MainScreen screen, GoogleAccountCredential credential) {
         super(screen, credential);
     }
 

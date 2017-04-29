@@ -8,6 +8,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.sheets.v4.model.ClearValuesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 import java.io.IOException;
@@ -179,5 +180,11 @@ public class ExpenseApiImpl implements ExpenseApi {
         sheetsApi.spreadsheets().values().
                 update(Constants.SPREADSHEET_ID, String.format(Constants.EXPENSES_ROW_RANGE, expense.index, expense.index), valueRange).
                 setValueInputOption("USER_ENTERED").execute();
+    }
+
+    @Override
+    public void deleteExpense(int index) throws IOException {
+        ClearValuesRequest request = new ClearValuesRequest();
+        sheetsApi.spreadsheets().values().clear(Constants.SPREADSHEET_ID, String.format(Constants.EXPENSES_ROW_RANGE, index, index), request).execute();
     }
 }
