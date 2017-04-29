@@ -15,10 +15,11 @@
     <string name="error_price">Please specify the price!</string>
     <string name="please_wait">Please wait…</string>
     <string name="sorting_by">Sorting by %1$s</string>
-    <string name="inserted">Inserted %1$d rows. It may take a minute for the effect to show in this app.</string>
-    <string name="updated">Updated %1$d rows. It may take a minute for the effect to show in this app.</string>
-    <string name="deleted">Deleted %1$d rows. It may take a minute for the effect to show in this app.</string>
+    <string name="inserted">Inserted %1$d rows</string>
+    <string name="updated">Updated %1$d rows</string>
+    <string name="deleted">Deleted %1$d rows</string>
     <string name="nothing_changed">Nothing changed</string>
     <string name="who_are_you">Who are you?</string>
     <string name="delete">Delete</string>
+    <string name="refresh">Refresh</string>
 </resources>

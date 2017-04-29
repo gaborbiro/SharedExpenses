@@ -29,5 +29,6 @@ public class DeleteExpensesTask extends BaseSheetsTask<ExpenseItem, Integer> {
     protected void onPostExecute(Integer response) {
         super.onPostExecute(response);
         screen.toast(R.string.deleted, response);
+        screen.update();
     }
 }

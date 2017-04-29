@@ -2,7 +2,6 @@ package com.gaborbiro.sharedexpenses.tasks;
 
 import android.content.Intent;
 import android.support.annotation.StringRes;
-import android.util.Log;
 
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.ui.screen.MainScreen;
@@ -14,6 +13,10 @@ public class DummyScreen implements MainScreen {
 
     @Override
     public void setExpenses(ExpenseItem[] expenses) {
+    }
+
+    @Override
+    public void update() {
     }
 
     @Override

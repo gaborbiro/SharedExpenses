@@ -30,5 +30,6 @@ public class UpdateExpensesTask extends BaseSheetsTask<ExpenseItem, Integer> {
     protected void onPostExecute(Integer response) {
         super.onPostExecute(response);
         screen.toast(R.string.updated, response);
+        screen.update();
     }
 }

@@ -7,4 +7,6 @@ public interface MainScreen extends GoogleApiScreen {
     void chooseTenant();
 
     void setExpenses(ExpenseItem[] expenses);
+
+    void update();
 }

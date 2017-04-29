@@ -78,16 +78,15 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
                 EditExpenseDialog.show(MainActivity.this, MainActivity.this, credential);
             }
         });
-
-        getDataFromApi();
+        update();
     }
 
     @Override
     public void onPermissionsGranted() {
-        getDataFromApi();
+        update();
     }
 
-    public void getDataFromApi() {
+    public void update() {
         if (googleApiPresenter.verifyApiAccess()) {
             new FetchExpensesTask(this, credential).execute();
             new FetchTenantNamesTask(this, credential).execute();
@@ -120,7 +119,10 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
                 }
                 toast(getString(R.string.sorting_by, newSort));
                 UserPrefs.setSort(newSort);
-                getDataFromApi();
+                update();
+                break;
+            case R.id.action_refresh:
+                update();
                 break;
         }
         return super.onOptionsItemSelected(item);
