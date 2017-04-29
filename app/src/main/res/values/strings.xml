@@ -7,7 +7,8 @@
     <string name="date">Date</string>
     <string name="comment">Comment</string>
 
-    <string name="ad_new_expense">Add a new expense</string>
+    <string name="add_new_expense_as">Add a new expense (as %1$s)</string>
+    <string name="add_new_expense">Add a new expense</string>
     <string name="submit">Submit</string>
 
     <string name="error_description">Please specify the description!</string>

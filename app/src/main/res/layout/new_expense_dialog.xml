@@ -7,16 +7,6 @@
     android:paddingRight="8dp">
 
     <EditText
-        android:id="@+id/buyer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:ellipsize="end"
-        android:hint="@string/buyer"
-        android:inputType="textPersonName"
-        android:lines="1" />
-
-    <EditText
         android:id="@+id/description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

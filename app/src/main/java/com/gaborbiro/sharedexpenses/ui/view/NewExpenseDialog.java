@@ -41,7 +41,6 @@ public class NewExpenseDialog extends MaterialDialog {
         private GoogleAccountCredential credential;
 
         private View layout;
-        private EditText buyerField;
         private EditText descriptionField;
         private EditText priceField;
         private EditText commentField;
@@ -53,7 +52,6 @@ public class NewExpenseDialog extends MaterialDialog {
             this.credential = credential;
 
             layout = LayoutInflater.from(context).inflate(R.layout.new_expense_dialog, null);
-            buyerField = (EditText) layout.findViewById(R.id.buyer);
             descriptionField = (EditText) layout.findViewById(R.id.description);
             priceField = (EditText) layout.findViewById(R.id.price);
             commentField = (EditText) layout.findViewById(R.id.comment);
@@ -62,8 +60,9 @@ public class NewExpenseDialog extends MaterialDialog {
             String selectedTenant = UserPrefs.getSelectedTenant();
 
             if (!TextUtils.isEmpty(selectedTenant)) {
-                buyerField.setText(selectedTenant);
-                buyerField.setEnabled(false);
+                title(context.getString(R.string.add_new_expense_as, selectedTenant));
+            } else {
+                title(context.getString(R.string.add_new_expense));
             }
 
             Calendar now = Calendar.getInstance();
@@ -78,7 +77,6 @@ public class NewExpenseDialog extends MaterialDialog {
             });
             customView(layout, false);
 
-            title(R.string.ad_new_expense);
             positiveText(R.string.submit);
             onPositive(new MaterialDialog.SingleButtonCallback() {
                 @Override
