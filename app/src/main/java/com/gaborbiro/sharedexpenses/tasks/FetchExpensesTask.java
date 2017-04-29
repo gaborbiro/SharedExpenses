@@ -1,7 +1,6 @@
 package com.gaborbiro.sharedexpenses.tasks;
 
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.ui.HtmlUtil;
 import com.gaborbiro.sharedexpenses.ui.screen.MainScreen;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
@@ -14,7 +13,7 @@ public class FetchExpensesTask extends BaseSheetsTask<Void, ExpenseItem[]> {
     @Override
     protected ExpenseItem[] doInBackground(Void... params) {
         try {
-            return service.getExpenses();
+            return service.fetchExpenses();
         } catch (Exception e) {
             mLastError = e;
             cancel(true);
@@ -25,10 +24,6 @@ public class FetchExpensesTask extends BaseSheetsTask<Void, ExpenseItem[]> {
     @Override
     protected void onPostExecute(ExpenseItem[] output) {
         super.onPostExecute(output);
-        if (output == null || output.length == 0) {
-            screen.data("Empty");
-        } else {
-            screen.data(HtmlUtil.getHtmlTableFromExpense(output));
-        }
+        screen.setExpenses(output);
     }
 }

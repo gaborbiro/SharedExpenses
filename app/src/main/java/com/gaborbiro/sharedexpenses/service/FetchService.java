@@ -29,14 +29,14 @@ import pub.devrel.easypermissions.EasyPermissions;
 public class FetchService extends Service {
 
     GoogleAccountCredential credential;
-    ExpenseApi service;
+    ExpenseApiImpl service;
 
     @Override
     public void onCreate() {
         super.onCreate();
         credential = GoogleAccountCredential.usingOAuth2(App.getAppContext(), Arrays.asList(GoogleApiActivity.SCOPES))
                 .setBackOff(new ExponentialBackOff());
-        service = new ExpenseApi(credential);
+        service = new ExpenseApiImpl(credential);
     }
 
     @Override

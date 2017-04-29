@@ -7,31 +7,52 @@ import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.gaborbiro.sharedexpenses.BuildConfig;
 import com.gaborbiro.sharedexpenses.Constants;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.UserPrefs;
+import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.model.Tenants;
 import com.gaborbiro.sharedexpenses.tasks.FetchExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.FetchTenantNamesTask;
+import com.gaborbiro.sharedexpenses.tasks.UpdateExpenseTask;
+import com.gaborbiro.sharedexpenses.ui.HtmlUtil;
 import com.gaborbiro.sharedexpenses.ui.presenter.MainPresenter;
 import com.gaborbiro.sharedexpenses.ui.screen.MainScreen;
-import com.gaborbiro.sharedexpenses.ui.view.NewExpenseDialog;
+import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
 public class MainActivity extends GoogleApiActivity implements MainScreen {
 
-    @InjectView(R.id.table)
-    WebView outputView;
+    @InjectView(R.id.webview) WebView webView;
 
     private MainPresenter presenter;
+    private Map<Integer, ExpenseItem> expenses;
+
+    public class WebAppInterface {
+
+        @JavascriptInterface
+        public void update(final int index) {
+            webView.post(new Runnable() {
+                @Override
+                public void run() {
+                    EditExpenseDialog.show(MainActivity.this, MainActivity.this, credential, expenses.get(index));
+                }
+            });
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,11 +62,11 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
 
         presenter = new MainPresenter(this);
 
-        outputView.getSettings().setJavaScriptEnabled(true);
-        outputView.setWebViewClient(new WebViewClient());
-        outputView.setWebChromeClient(new WebChromeClient());
-        outputView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
-        outputView.setScrollbarFadingEnabled(true);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.setWebChromeClient(new WebChromeClient());
+        webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
+        webView.setScrollbarFadingEnabled(true);
+        webView.addJavascriptInterface(new WebAppInterface(), "android");
 
         Toolbar toolbar = (Toolbar) findViewById(com.gaborbiro.sharedexpenses.R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -56,15 +77,9 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new NewExpenseDialog.Builder(MainActivity.this, MainActivity.this, credential).build().show();
+                EditExpenseDialog.show(MainActivity.this, MainActivity.this, credential);
             }
         });
-
-//        Intent intent = new Intent(this, FetchService.class);
-//        PendingIntent pintent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-//        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-//        int interval = 5 * 1000;
-//        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000, interval, pintent);
 
         getDataFromApi();
     }
@@ -126,12 +141,23 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
 
     @Override
     public void error(String text) {
-        outputView.loadData(text, "", "");
+        webView.loadDataWithBaseURL("file:///android_asset/", text, "text/html", "UTF-8", null);
     }
 
     @Override
-    public void data(String data) {
-        outputView.loadData(data, "", "");
+    public void setExpenses(ExpenseItem[] expenses) {
+//        webView.loadUrl("file:///android_asset/test.html");
+        try {
+            String html = HtmlUtil.getHtmlTableFromExpense(this, expenses);
+            webView.loadDataWithBaseURL("file:///android_asset/", html, "text/html", "UTF-8", null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.expenses = new HashMap<>();
+
+        for (ExpenseItem expense : expenses) {
+            this.expenses.put(expense.index, expense);
+        }
     }
 
     public void updateTitle() {

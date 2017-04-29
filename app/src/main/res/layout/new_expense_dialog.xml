@@ -1,59 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingLeft="8dp"
-    android:paddingRight="8dp">
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_height="wrap_content"
+              android:layout_width="match_parent"
+              android:orientation="vertical"
+              android:paddingLeft="8dp"
+              android:paddingRight="8dp">
 
     <EditText
-        android:id="@+id/description"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
         android:ellipsize="end"
         android:hint="@string/description"
-        android:inputType="textAutoComplete|textCapWords">
+        android:id="@+id/description"
+        android:inputType="textAutoComplete|textCapWords"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:layout_width="match_parent">
 
-        <requestFocus />
+        <requestFocus/>
     </EditText>
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:gravity="center_vertical"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
         android:orientation="horizontal"
         android:paddingLeft="@dimen/fab_margin">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/currency"
             android:layout_height="wrap_content"
-            android:text="£" />
+            android:layout_width="wrap_content"
+            tools:text="£"/>
 
         <EditText
-            android:id="@+id/price"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
             android:ellipsize="end"
             android:hint="@string/price"
+            android:id="@+id/price"
             android:inputType="numberDecimal"
-            android:lines="1" />
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:layout_width="match_parent"
+            android:lines="1"/>
     </LinearLayout>
 
     <DatePicker
-        android:id="@+id/date_picker"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:calendarViewShown="false"
-        android:datePickerMode="spinner" />
+        android:datePickerMode="spinner"
+        android:id="@+id/date_picker"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"/>
 
     <EditText
-        android:id="@+id/comment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
         android:ellipsize="end"
         android:hint="@string/comment"
-        android:inputType="textMultiLine|textCapSentences" />
+        android:id="@+id/comment"
+        android:inputType="textMultiLine|textCapSentences"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:layout_width="match_parent"/>
 </LinearLayout>

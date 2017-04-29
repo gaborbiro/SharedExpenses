@@ -1,12 +1,15 @@
 package com.gaborbiro.sharedexpenses.ui;
 
+import android.content.Context;
 import android.text.TextUtils;
 
 import com.gaborbiro.sharedexpenses.Constants;
 import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.service.ExpenseApi;
+import com.gaborbiro.sharedexpenses.service.ExpenseApiImpl;
+import com.gaborbiro.sharedexpenses.util.AssetUtils;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Objects;
@@ -15,7 +18,7 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 
 public class HtmlUtil {
 
-    public static String getHtmlTableFromExpense(ExpenseItem[] expenses) {
+    public static String getHtmlTableFromExpense(Context context, ExpenseItem[] expenses) throws IOException {
         ExpenseItem[] copy = new ExpenseItem[expenses.length];
         System.arraycopy(expenses, 0, copy, 0, expenses.length);
 
@@ -55,85 +58,52 @@ public class HtmlUtil {
             }
         });
         expenses = copy;
-
+        String table = AssetUtils.readAssetAsText(context, "table.html");
+        String row = AssetUtils.readAssetAsText(context, "row.html");
+        String sectionHeader = AssetUtils.readAssetAsText(context, "section_header.html");
+        String speechBubble = AssetUtils.readAssetAsText(context, "speech_bubble.html");
         StringBuffer result = new StringBuffer();
-        result.append("<html>");
-        result.append("<head>" +
-                "<script>" +
-                "    function prompt(text)" +
-                "    {" +
-                "        alert(text);" +
-                "    }" +
-                "    </script>" +
-                "</head>");
-        result.append("<table>");
-        result.append("<thead>");
-        result.append("<tr>");
-        if (Objects.equals(UserPrefs.getSort(Constants.DEFAULT_SORT), Constants.SORT_USER)) {
-            result.append("<td><u>Date</u></td><td><u>Description</u></td><td><u>Price</u></td><td><u>Comment</u></td>");
-        } else {
-            result.append("<td><u>Buyer</u></td><td><u>Description</u></td><td><u>Price</u></td><td><u>Comment</u></td>");
-        }
-        result.append("</tr>");
-        result.append("</thead>");
-        result.append("<tbody>");
-
         String currentDate = null;
         String currentUser = null;
 
         for (ExpenseItem expense : expenses) {
             if (Objects.equals(UserPrefs.getSort(Constants.DEFAULT_SORT), Constants.SORT_USER)) {
                 if (expense.buyer != null && !expense.buyer.equals(currentUser)) {
-                    result.append("<tr bgcolor=\"#eeeeee\"><td colspan=\"4\" align=\"center\"><font color=\"#666\">");
-                    result.append(expense.buyer);
-                    result.append("</font></td></tr>");
+                    result.append(String.format(sectionHeader, expense.buyer));
                     currentUser = expense.buyer;
                 }
             } else {
                 if (expense.date != null) {
-                    String formattedDate = ExpenseApi.DATE_FORMAT.format(expense.date);
+                    String formattedDate = ExpenseApiImpl.DATE_FORMAT.format(expense.date);
                     if (!formattedDate.equals(currentDate)) {
-                        result.append("<tr bgcolor=\"#eeeeee\"><td colspan=\"4\" align=\"center\"><font color=\"#666\">");
-                        result.append(formattedDate);
-                        result.append("</font></td></tr>");
+                        result.append(String.format(sectionHeader, formattedDate));
                         currentDate = formattedDate;
                     }
                 } else {
                     if (!expense.dateString.equals(currentDate)) {
-                        result.append("<tr bgcolor=\"#eeeeee\"><td colspan=\"4\" align=\"center\"><font color=\"#666\">");
-                        result.append(expense.dateString);
-                        result.append("</font></td></tr>");
+                        result.append(String.format(sectionHeader, expense.dateString));
                         currentDate = expense.dateString;
                     }
                 }
             }
-            result.append("<tr>");
-            result.append("<td>");
+            String dateOrBuyer;
             if (Objects.equals(UserPrefs.getSort(Constants.DEFAULT_SORT), Constants.SORT_USER)) {
                 if (expense.date != null) {
-                    result.append(ExpenseApi.DATE_FORMAT.format(expense.date));
+                    dateOrBuyer = ExpenseApiImpl.DATE_FORMAT.format(expense.date);
                 } else {
-                    result.append(expense.dateString);
+                    dateOrBuyer = expense.dateString;
                 }
             } else {
-                result.append(clearHtml(expense.buyer));
+                dateOrBuyer = clearHtml(expense.buyer);
             }
-            result.append("</td>");
-            result.append("<td>");
-            result.append(clearHtml(expense.description));
-            result.append("</td>");
-            result.append("<td>");
-            result.append(clearHtml(expense.price));
-            result.append("</td>");
-            result.append("<td>");
-            result.append(clearHtml(expense.comment));
-            result.append("</td>");
-            result.append("</tr>");
+            if (TextUtils.isEmpty(expense.comment)) {
+                result.append(String.format(row, expense.index, dateOrBuyer, clearHtml(expense.description), clearHtml(expense.price), ""));
+            } else {
+                result.append(String.format(row, expense.index, dateOrBuyer, clearHtml(expense.description), clearHtml(expense.price), speechBubble));
+                //clearHtml(expense.comment)
+            }
         }
-        result.append("</tbody>");
-        result.append("</table>");
-        result.append("</html>");
-        return result.toString();
+        return String.format(table, result.toString());
     }
 
     private static String clearHtml(String str) {

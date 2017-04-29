@@ -2,7 +2,7 @@ package com.gaborbiro.sharedexpenses.model;
 
 import java.util.Date;
 
-import static com.gaborbiro.sharedexpenses.service.ExpenseApi.DATE_FORMAT;
+import static com.gaborbiro.sharedexpenses.service.ExpenseApiImpl.DATE_FORMAT;
 
 public class ExpenseItem {
     public final int index;
@@ -40,5 +40,34 @@ public class ExpenseItem {
     @Override
     public String toString() {
         return buyer + " " + description + " " + price + " " + (date != null ? DATE_FORMAT.format(date) : dateString) + " " + comment;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ExpenseItem that = (ExpenseItem) o;
+
+        if (buyer != null ? !buyer.equals(that.buyer) : that.buyer != null) return false;
+        if (description != null ? !description.equals(that.description) : that.description != null)
+            return false;
+        if (price != null ? !price.equals(that.price) : that.price != null) return false;
+        if (date != null ? !date.equals(that.date) : that.date != null) return false;
+        if (dateString != null ? !dateString.equals(that.dateString) : that.dateString != null)
+            return false;
+        return comment != null ? comment.equals(that.comment) : that.comment == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = buyer != null ? buyer.hashCode() : 0;
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (price != null ? price.hashCode() : 0);
+        result = 31 * result + (date != null ? date.hashCode() : 0);
+        result = 31 * result + (dateString != null ? dateString.hashCode() : 0);
+        result = 31 * result + (comment != null ? comment.hashCode() : 0);
+        return result;
     }
 }

@@ -1,0 +1,23 @@
+<html>
+<head>
+    <LINK href="styles.css" type="text/css" rel="stylesheet"/>
+</head>
+<body>
+<table id="table">
+<thead>
+<tr>
+    <td><u>Buyer</u></td>
+    <td><u>Description</u></td>
+    <td><u>Price</u></td>
+    <td><img src="speech_bubble.png" height="24px"></td>
+</tr>
+</thead>
+<tbody>%s</tbody>
+</table>
+</body>
+</html>
+<script>
+    function onRowClicked(row, index) {
+        android.update(index);
+    }
+</script>

@@ -2,7 +2,7 @@ package com.gaborbiro.sharedexpenses.tasks;
 
 import android.os.AsyncTask;
 
-import com.gaborbiro.sharedexpenses.service.ExpenseApi;
+import com.gaborbiro.sharedexpenses.service.ExpenseApiImpl;
 import com.gaborbiro.sharedexpenses.ui.screen.MainScreen;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
@@ -11,12 +11,12 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecovera
 abstract class BaseSheetsTask<I, O> extends AsyncTask<I, Void, O> {
 
     MainScreen screen;
-    ExpenseApi service;
+    ExpenseApiImpl service;
     Exception mLastError = null;
 
     BaseSheetsTask(MainScreen screen, GoogleAccountCredential credential) {
         this.screen = screen;
-        this.service = new ExpenseApi(credential);
+        this.service = new ExpenseApiImpl(credential);
     }
 
     @Override
