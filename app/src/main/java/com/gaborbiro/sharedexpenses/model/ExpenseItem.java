@@ -1,11 +1,6 @@
 package com.gaborbiro.sharedexpenses.model;
 
-import com.gaborbiro.sharedexpenses.SpreadsheetException;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 import static com.gaborbiro.sharedexpenses.service.ExpenseApi.DATE_FORMAT;
 

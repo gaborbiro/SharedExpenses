@@ -37,14 +37,27 @@ public class NewExpenseDialog extends MaterialDialog {
     //
     public static class Builder extends MaterialDialog.Builder {
 
+        private MainScreen screen;
+        private GoogleAccountCredential credential;
+
+        private View layout;
+        private EditText buyerField;
+        private EditText descriptionField;
+        private EditText priceField;
+        private EditText commentField;
+        private DatePicker datePicker;
+
         public Builder(@NonNull Context context, final MainScreen screen, final GoogleAccountCredential credential) {
             super(context);
-            final View layout = LayoutInflater.from(context).inflate(R.layout.new_expense_dialog, null);
-            final EditText buyerField = (EditText) layout.findViewById(R.id.buyer);
-            final EditText descriptionField = (EditText) layout.findViewById(R.id.description);
-            final EditText priceField = (EditText) layout.findViewById(R.id.price);
-            final EditText commentField = (EditText) layout.findViewById(R.id.comment);
-            final DatePicker datePicker = (DatePicker) layout.findViewById(R.id.date_picker);
+            this.screen = screen;
+            this.credential = credential;
+
+            layout = LayoutInflater.from(context).inflate(R.layout.new_expense_dialog, null);
+            buyerField = (EditText) layout.findViewById(R.id.buyer);
+            descriptionField = (EditText) layout.findViewById(R.id.description);
+            priceField = (EditText) layout.findViewById(R.id.price);
+            commentField = (EditText) layout.findViewById(R.id.comment);
+            datePicker = (DatePicker) layout.findViewById(R.id.date_picker);
 
             String selectedTenant = UserPrefs.getSelectedTenant();
 
@@ -70,27 +83,7 @@ public class NewExpenseDialog extends MaterialDialog {
             onPositive(new MaterialDialog.SingleButtonCallback() {
                 @Override
                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                    String buyer = UserPrefs.getSelectedTenant();
-                    String description = descriptionField.getText().toString();
-
-                    if (TextUtils.isEmpty(description)) {
-                        screen.toast(R.string.error_description);
-                        return;
-                    }
-
-                    if (TextUtils.isEmpty(priceField.getText().toString())) {
-                        screen.toast(R.string.error_price);
-                        return;
-                    }
-                    String price = DecimalFormat.getCurrencyInstance(Locale.UK).format(Double.valueOf(priceField.getText().toString()));
-                    String comment = commentField.getText().toString();
-                    Calendar selectedDate = Calendar.getInstance();
-                    selectedDate.set(Calendar.YEAR, datePicker.getYear());
-                    selectedDate.set(Calendar.MONTH, datePicker.getMonth());
-                    selectedDate.set(Calendar.YEAR, datePicker.getYear());
-                    ExpenseItem entry = new ExpenseItem(buyer, description, price, selectedDate.getTime(), comment);
-                    new InsertSheetsTask(screen, credential).execute(entry);
-                    dialog.dismiss();
+                    onSubmitDialog(dialog);
                 }
             });
             negativeText(android.R.string.cancel);
@@ -101,6 +94,30 @@ public class NewExpenseDialog extends MaterialDialog {
                 }
             });
             autoDismiss(false);
+        }
+
+        private void onSubmitDialog(@NonNull MaterialDialog dialog) {
+            String buyer = UserPrefs.getSelectedTenant();
+            String description = descriptionField.getText().toString();
+
+            if (TextUtils.isEmpty(description)) {
+                screen.toast(R.string.error_description);
+                return;
+            }
+
+            if (TextUtils.isEmpty(priceField.getText().toString())) {
+                screen.toast(R.string.error_price);
+                return;
+            }
+            String price = DecimalFormat.getCurrencyInstance(Locale.UK).format(Double.valueOf(priceField.getText().toString()));
+            String comment = commentField.getText().toString();
+            Calendar selectedDate = Calendar.getInstance();
+            selectedDate.set(Calendar.DATE, datePicker.getDayOfMonth());
+            selectedDate.set(Calendar.MONTH, datePicker.getMonth());
+            selectedDate.set(Calendar.YEAR, datePicker.getYear());
+            ExpenseItem entry = new ExpenseItem(buyer, description, price, selectedDate.getTime(), comment);
+            new InsertSheetsTask(screen, credential).execute(entry);
+            dialog.dismiss();
         }
     }
 }

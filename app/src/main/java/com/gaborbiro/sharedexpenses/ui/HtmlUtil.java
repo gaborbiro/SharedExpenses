@@ -5,6 +5,7 @@ import android.text.TextUtils;
 import com.gaborbiro.sharedexpenses.Constants;
 import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
+import com.gaborbiro.sharedexpenses.service.ExpenseApi;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -90,7 +91,7 @@ public class HtmlUtil {
                 }
             } else {
                 if (expense.date != null) {
-                    String formattedDate = ExpenseItem.DATE_FORMAT.format(expense.date);
+                    String formattedDate = ExpenseApi.DATE_FORMAT.format(expense.date);
                     if (!formattedDate.equals(currentDate)) {
                         result.append("<tr bgcolor=\"#eeeeee\"><td colspan=\"4\" align=\"center\"><font color=\"#666\">");
                         result.append(formattedDate);
@@ -110,7 +111,7 @@ public class HtmlUtil {
             result.append("<td>");
             if (Objects.equals(UserPrefs.getSort(Constants.DEFAULT_SORT), Constants.SORT_USER)) {
                 if (expense.date != null) {
-                    result.append(ExpenseItem.DATE_FORMAT.format(expense.date));
+                    result.append(ExpenseApi.DATE_FORMAT.format(expense.date));
                 } else {
                     result.append(expense.dateString);
                 }
