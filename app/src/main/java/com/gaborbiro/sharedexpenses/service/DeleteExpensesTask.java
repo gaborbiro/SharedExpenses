@@ -1,4 +1,4 @@
-package com.gaborbiro.sharedexpenses.tasks;
+package com.gaborbiro.sharedexpenses.service;
 
 import com.gaborbiro.sharedexpenses.AppPrefs;
 import com.gaborbiro.sharedexpenses.R;
@@ -13,10 +13,10 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-public class InsertExpensesTask extends BaseExpensesTask<ExpenseItem, Integer> {
+public class DeleteExpensesTask extends BaseExpensesTask<ExpenseItem, Integer> {
 
     @Inject
-    public InsertExpensesTask(AppPrefs appPrefs, UserPrefs userPrefs, GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, WebScreen webScreen, ExpenseApi expenseApi) {
+    public DeleteExpensesTask(AppPrefs appPrefs, UserPrefs userPrefs, GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, WebScreen webScreen, ExpenseApi expenseApi) {
         super(appPrefs, userPrefs, googleApiScreen, progressScreen, webScreen, expenseApi);
     }
 
@@ -24,7 +24,7 @@ public class InsertExpensesTask extends BaseExpensesTask<ExpenseItem, Integer> {
     protected Integer work(ExpenseItem... params) throws IOException {
         int modifiedRowCount = 0;
         for (ExpenseItem expense : params) {
-            service.insertExpense(expense);
+            service.deleteExpense(expense.index);
             modifiedRowCount++;
         }
         return modifiedRowCount;
@@ -33,7 +33,7 @@ public class InsertExpensesTask extends BaseExpensesTask<ExpenseItem, Integer> {
     @Override
     protected void onPostExecute(Integer response) {
         super.onPostExecute(response);
-        progressScreen.toast(R.string.inserted, response);
+        progressScreen.toast(R.string.deleted, response);
         webScreen.update();
     }
 }

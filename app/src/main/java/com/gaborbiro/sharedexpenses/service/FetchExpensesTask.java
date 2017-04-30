@@ -1,4 +1,4 @@
-package com.gaborbiro.sharedexpenses.tasks;
+package com.gaborbiro.sharedexpenses.service;
 
 import com.gaborbiro.sharedexpenses.AppPrefs;
 import com.gaborbiro.sharedexpenses.UserPrefs;

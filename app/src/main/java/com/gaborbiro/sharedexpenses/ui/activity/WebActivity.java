@@ -16,8 +16,8 @@ import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.BuildConfig;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.tasks.FetchExpensesTask;
-import com.gaborbiro.sharedexpenses.tasks.FetchTenantNamesTask;
+import com.gaborbiro.sharedexpenses.service.FetchExpensesTask;
+import com.gaborbiro.sharedexpenses.service.FetchTenantNamesTask;
 import com.gaborbiro.sharedexpenses.ui.HtmlHelper;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
 
