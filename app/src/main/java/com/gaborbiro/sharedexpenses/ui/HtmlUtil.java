@@ -18,7 +18,7 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 
 public class HtmlUtil {
 
-    public static String getHtmlTableFromExpense(Context context, ExpenseItem[] expenses) throws IOException {
+    public static String getHtmlTableFromExpense(Context context, ExpenseItem[] expenses, final String sort) throws IOException {
         ExpenseItem[] copy = new ExpenseItem[expenses.length];
         System.arraycopy(expenses, 0, copy, 0, expenses.length);
 
@@ -26,7 +26,7 @@ public class HtmlUtil {
             @Override
             public int compare(ExpenseItem o1, ExpenseItem o2) {
                 int result = 0;
-                if (Objects.equals(UserPrefs.getSort(Constants.DEFAULT_SORT), Constants.SORT_USER)) {
+                if (Objects.equals(sort, Constants.SORT_USER)) {
                     result = o2.buyer.compareTo(o1.buyer);
 
                     if (result == 0) {
@@ -67,7 +67,7 @@ public class HtmlUtil {
         String currentUser = null;
 
         for (ExpenseItem expense : expenses) {
-            if (Objects.equals(UserPrefs.getSort(Constants.DEFAULT_SORT), Constants.SORT_USER)) {
+            if (Objects.equals(sort, Constants.SORT_USER)) {
                 if (expense.buyer != null && !expense.buyer.equals(currentUser)) {
                     result.append(String.format(sectionHeader, expense.buyer));
                     currentUser = expense.buyer;
@@ -87,7 +87,7 @@ public class HtmlUtil {
                 }
             }
             String dateOrBuyer;
-            if (Objects.equals(UserPrefs.getSort(Constants.DEFAULT_SORT), Constants.SORT_USER)) {
+            if (Objects.equals(sort, Constants.SORT_USER)) {
                 if (expense.date != null) {
                     dateOrBuyer = ExpenseApiImpl.DATE_FORMAT.format(expense.date);
                 } else {

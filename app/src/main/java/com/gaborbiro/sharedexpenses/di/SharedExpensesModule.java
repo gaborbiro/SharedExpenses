@@ -1,0 +1,65 @@
+package com.gaborbiro.sharedexpenses.di;
+
+import android.app.Application;
+import android.content.Context;
+
+import com.gaborbiro.sharedexpenses.App;
+import com.gaborbiro.sharedexpenses.service.ExpenseApi;
+import com.gaborbiro.sharedexpenses.service.ExpenseApiImpl;
+import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.services.sheets.v4.SheetsScopes;
+
+import java.util.Arrays;
+
+import javax.inject.Singleton;
+
+import dagger.Module;
+import dagger.Provides;
+
+@Module
+public class SharedExpensesModule {
+
+    private static final String[] SCOPES = {SheetsScopes.SPREADSHEETS};
+
+    @Provides
+    Context provideContext(App application) {
+        return application.getApplicationContext();
+    }
+
+    @Provides
+    App provideApp(Application application) {
+        return (App) application;
+    }
+
+    @Provides
+    GoogleApiScreen provideGoogleApiScreen(App app) {
+        return app.getGoogleApiScreen();
+    }
+
+    @Provides
+    ProgressScreen provideProgressScreen(App app) {
+        return app.getProgressScreen();
+    }
+
+    @Provides
+    public MainScreen provideMainScreen(App app) {
+        return app.getMainScreen();
+    }
+
+    @Provides
+    @Singleton
+    GoogleAccountCredential provideGoogleAccountCredential(Context context) {
+        return GoogleAccountCredential.usingOAuth2(context, Arrays.asList(SCOPES))
+                .setBackOff(new ExponentialBackOff());
+    }
+
+    @Provides
+    @Singleton
+    ExpenseApi provideExpenseApi(GoogleAccountCredential credential) {
+        return new ExpenseApiImpl(credential);
+    }
+}

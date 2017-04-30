@@ -4,18 +4,24 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import com.gaborbiro.sharedexpenses.App;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
-public class ConnectivityUtil {
+@Singleton
+public class ConnectivityHelper {
+
+    @Inject Context context;
+
+    @Inject ConnectivityHelper() {}
 
     /**
      * Checks whether the device currently has a network connection.
      *
      * @return true if the device has a network connection, false otherwise.
      */
-    public static boolean isDeviceOnline() {
+    public boolean isDeviceOnline() {
         ConnectivityManager connMgr =
-                (ConnectivityManager) App.getAppContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());
     }

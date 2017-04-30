@@ -1,33 +1,43 @@
 package com.gaborbiro.sharedexpenses;
 
-import com.gaborbiro.sharedexpenses.util.PrefsUtil;
+import com.gaborbiro.sharedexpenses.util.PrefsHelper;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+@Singleton
 public class UserPrefs {
     private static final String PREF_ACCOUNT_NAME = "com.gaborbiro.sharedexpenses.PREF_ACCOUNT_NAME";
     private static final String PREF_SELECTED_TENANT = "com.gaborbiro.sharedexpenses.PREF_SELECTED_TENANT";
     private static final String PREF_SORT = "com.gaborbiro.sharedexpenses.PREF_SORT";
+    private final PrefsHelper prefsHelper;
 
-    public static String getAccountName() {
-        return PrefsUtil.get(PREF_ACCOUNT_NAME, (String) null);
+    @Inject
+    public UserPrefs(PrefsHelper prefsHelper) {
+        this.prefsHelper = prefsHelper;
     }
 
-    public static void setAccountName(String name) {
-        PrefsUtil.put(PREF_ACCOUNT_NAME, name);
+    public String getAccountName() {
+        return prefsHelper.get(PREF_ACCOUNT_NAME, (String) null);
     }
 
-    public static String getSelectedTenant() {
-        return PrefsUtil.get(PREF_SELECTED_TENANT, (String) null);
+    public void setAccountName(String name) {
+        prefsHelper.put(PREF_ACCOUNT_NAME, name);
     }
 
-    public static void setSelectedTenant(String tenant) {
-        PrefsUtil.put(PREF_SELECTED_TENANT, tenant);
+    public String getSelectedTenant() {
+        return prefsHelper.get(PREF_SELECTED_TENANT, (String) null);
     }
 
-    public static String getSort(String default_) {
-        return PrefsUtil.get(PREF_SORT, default_);
+    public void setSelectedTenant(String tenant) {
+        prefsHelper.put(PREF_SELECTED_TENANT, tenant);
     }
 
-    public static void setSort(String sort) {
-        PrefsUtil.put(PREF_SORT, sort);
+    public String getSort(String default_) {
+        return prefsHelper.get(PREF_SORT, default_);
+    }
+
+    public void setSort(String sort) {
+        prefsHelper.put(PREF_SORT, sort);
     }
 }

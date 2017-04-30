@@ -2,15 +2,24 @@ package com.gaborbiro.sharedexpenses.ui.presenter;
 
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
-import com.gaborbiro.sharedexpenses.util.ConnectivityUtil;
+import com.gaborbiro.sharedexpenses.util.ConnectivityHelper;
+
+import javax.inject.Inject;
 
 public class GoogleApiPresenter {
+
+    @Inject ConnectivityHelper connectivityHelper;
 
     private GoogleApiScreen googleApiScreen;
     private ProgressScreen progressScreen;
 
-    public GoogleApiPresenter(GoogleApiScreen googleApiScreen, ProgressScreen progressScreen) {
+    @Inject GoogleApiPresenter() {}
+
+    public void setGoogleApiScreen(GoogleApiScreen googleApiScreen) {
         this.googleApiScreen = googleApiScreen;
+    }
+
+    public void setProgressScreen(ProgressScreen progressScreen) {
         this.progressScreen = progressScreen;
     }
 
@@ -28,7 +37,7 @@ public class GoogleApiPresenter {
         } else if (googleApiScreen.getSelectedAccountName() == null) {
             googleApiScreen.chooseGoogleAccount();
             return false;
-        } else if (!ConnectivityUtil.isDeviceOnline()) {
+        } else if (!connectivityHelper.isDeviceOnline()) {
             progressScreen.error("No network connection available.");
             return false;
         } else {

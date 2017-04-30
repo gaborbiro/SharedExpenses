@@ -2,30 +2,35 @@ package com.gaborbiro.sharedexpenses.tasks;
 
 import android.os.AsyncTask;
 
+import com.gaborbiro.sharedexpenses.AppPrefs;
+import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.service.ExpenseApi;
-import com.gaborbiro.sharedexpenses.service.ExpenseApiImpl;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 
 import java.io.IOException;
 
-abstract class BaseExpendesTask<I, O> extends AsyncTask<I, Void, O> {
+public abstract class BaseExpensesTask<I, O> extends AsyncTask<I, Void, O> {
 
-    ProgressScreen progressScreen;
-    GoogleApiScreen googleApiScreen;
-    MainScreen mainScreen;
-    ExpenseApi service;
+    protected AppPrefs appPrefs;
+    protected UserPrefs userPrefs;
+    protected GoogleApiScreen googleApiScreen;
+    protected ProgressScreen progressScreen;
+    protected MainScreen mainScreen;
+    protected ExpenseApi service;
+
     private IOException lastError;
 
-    BaseExpendesTask(GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, MainScreen mainScreen, GoogleAccountCredential credential) {
+    public BaseExpensesTask(AppPrefs appPrefs, UserPrefs userPrefs, GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, MainScreen mainScreen, ExpenseApi service) {
+        this.appPrefs = appPrefs;
+        this.userPrefs = userPrefs;
         this.googleApiScreen = googleApiScreen;
         this.progressScreen = progressScreen;
         this.mainScreen = mainScreen;
-        this.service = new ExpenseApiImpl(credential);
+        this.service = service;
     }
 
     @Override

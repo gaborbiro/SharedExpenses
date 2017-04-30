@@ -16,21 +16,43 @@ public abstract class ProgressActivity extends BaseActivity implements ProgressS
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        app.setProgressScreen(this);
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage(getString(R.string.please_wait));
     }
 
     @Override
-    public void showProgress() {
+    protected void onStart() {
+        super.onStart();
+        app.setProgressScreen(this);
+    }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        app.setProgressScreen(null);
+    }
+
+    @Override
+    public void showProgress() {
         progressCount++;
-        progressDialog.show();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                progressDialog.show();
+            }
+        });
     }
 
     @Override
     public void hideProgress() {
         if (--progressCount <= 0) {
-            progressDialog.hide();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    progressDialog.hide();
+                }
+            });
             progressCount = 0;
         }
     }

@@ -12,45 +12,47 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.gaborbiro.sharedexpenses.AppPrefs;
+import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.BuildConfig;
 import com.gaborbiro.sharedexpenses.Constants;
 import com.gaborbiro.sharedexpenses.R;
-import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.tasks.FetchExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.FetchTenantNamesTask;
 import com.gaborbiro.sharedexpenses.ui.HtmlUtil;
-import com.gaborbiro.sharedexpenses.ui.presenter.MainPresenter;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import butterknife.BindView;
 
 public class MainActivity extends GoogleApiActivity implements MainScreen {
 
+    @Inject Provider<FetchExpensesTask> fetchExpensesTaskProvider;
+    @Inject Provider<FetchTenantNamesTask> fetchTenantNamesTaskProvider;
+
     @BindView(R.id.webview) WebView webView;
 
-    private MainPresenter presenter;
     private Map<Integer, ExpenseItem> expenses;
 
     public class WebAppInterface {
 
         @JavascriptInterface
         public void update(final int index) {
-            EditExpenseDialog.show(MainActivity.this, MainActivity.this, MainActivity.this, MainActivity.this, credential, expenses.get(index));
+            EditExpenseDialog.show(MainActivity.this, expenses.get(index));
         }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        app.setMainScreen(this);
         setContentView(com.gaborbiro.sharedexpenses.R.layout.activity_main);
-
-        presenter = new MainPresenter(this);
 
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setWebChromeClient(new WebChromeClient());
@@ -67,10 +69,27 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EditExpenseDialog.show(MainActivity.this, MainActivity.this, MainActivity.this, MainActivity.this, credential);
+                EditExpenseDialog.show(MainActivity.this);
             }
         });
         update();
+    }
+
+    @Override
+    protected void inject() {
+        App.component.inject(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        app.setMainScreen(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        app.setMainScreen(null);
     }
 
     @Override
@@ -80,8 +99,8 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
 
     public void update() {
         if (googleApiPresenter.verifyApiAccess()) {
-            new FetchExpensesTask(this, this, this, credential).execute();
-            new FetchTenantNamesTask(this, this, this, credential).execute();
+            fetchExpensesTaskProvider.get().execute();
+            fetchTenantNamesTaskProvider.get().execute();
         }
     }
 
@@ -98,7 +117,7 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
         switch (id) {
             case R.id.action_sort_by:
                 String newSort;
-                switch (UserPrefs.getSort(Constants.DEFAULT_SORT)) {
+                switch (userPrefs.getSort(Constants.DEFAULT_SORT)) {
                     case Constants.SORT_DATE:
                         newSort = Constants.SORT_USER;
                         break;
@@ -110,7 +129,7 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
                         break;
                 }
                 toast(getString(R.string.sorting_by, newSort));
-                UserPrefs.setSort(newSort);
+                userPrefs.setSort(newSort);
                 update();
                 break;
             case R.id.action_refresh:
@@ -121,10 +140,10 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
     }
 
     public void chooseTenant() {
-        new MaterialDialog.Builder(this).items(AppPrefs.getTenants()).itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
+        new MaterialDialog.Builder(this).items(appPrefs.getTenants()).itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
             @Override
             public boolean onSelection(MaterialDialog dialog, View itemView, int which, CharSequence text) {
-                UserPrefs.setSelectedTenant(text.toString());
+                userPrefs.setSelectedTenant(text.toString());
                 updateTitle();
                 return true;
             }
@@ -140,7 +159,7 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
     public void setExpenses(ExpenseItem[] expenses) {
 //        webView.loadUrl("file:///android_asset/test.html");
         try {
-            String html = HtmlUtil.getHtmlTableFromExpense(this, expenses);
+            String html = HtmlUtil.getHtmlTableFromExpense(this, expenses, userPrefs.getSort(Constants.DEFAULT_SORT));
             webView.loadDataWithBaseURL("file:///android_asset/", html, "text/html", "UTF-8", null);
         } catch (IOException e) {
             e.printStackTrace();
@@ -154,9 +173,9 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
 
     public void updateTitle() {
         String title = getString(R.string.app_name);
-        String user = UserPrefs.getSelectedTenant();
+        String user = userPrefs.getSelectedTenant();
         if (!TextUtils.isEmpty(user)) {
-            title += " (" + UserPrefs.getSelectedTenant() + ")";
+            title += " (" + userPrefs.getSelectedTenant() + ")";
         }
         title += " " + BuildConfig.VERSION_NAME;
         getSupportActionBar().setTitle(title);

@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Inject;
+
 public class ExpenseApiImpl implements ExpenseApi {
     private static final String COLUMN_BUYER = "Buyer";
     private static final String COLUMN_DESCRIPTION = "Description";
@@ -29,6 +31,7 @@ public class ExpenseApiImpl implements ExpenseApi {
 
     com.google.api.services.sheets.v4.Sheets sheetsApi = null;
 
+    @Inject
     public ExpenseApiImpl(GoogleAccountCredential credential) {
         this.sheetsApi = getSheetsApi(credential);
     }

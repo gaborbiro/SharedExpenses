@@ -9,17 +9,14 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.gaborbiro.sharedexpenses.App;
-import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.ui.presenter.GoogleApiPresenter;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.sheets.v4.SheetsScopes;
 
-import java.util.Arrays;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -31,19 +28,27 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
     public static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     public static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
-    public static final String[] SCOPES = {SheetsScopes.SPREADSHEETS};
-
-    GoogleAccountCredential credential;
-
-    GoogleApiPresenter googleApiPresenter;
+    @Inject GoogleAccountCredential credential;
+    @Inject GoogleApiPresenter googleApiPresenter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.googleApiPresenter = new GoogleApiPresenter(this, this);
-        // Initialize credentials and service object.
-        credential = GoogleAccountCredential.usingOAuth2(App.getAppContext(), Arrays.asList(SCOPES))
-                .setBackOff(new ExponentialBackOff());
+        googleApiPresenter.setGoogleApiScreen(this);
+        googleApiPresenter.setProgressScreen(this);
+        app.setGoogleApiScreen(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        app.setGoogleApiScreen(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        app.setGoogleApiScreen(null);
     }
 
     @Override
@@ -60,8 +65,7 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
     @Override
     public boolean isGooglePlayServicesAvailable() {
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-        final int connectionStatusCode =
-                apiAvailability.isGooglePlayServicesAvailable(App.getAppContext());
+        final int connectionStatusCode = apiAvailability.isGooglePlayServicesAvailable(this);
         return connectionStatusCode == ConnectionResult.SUCCESS;
     }
 
@@ -72,8 +76,7 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
     @Override
     public void acquireGooglePlayServices() {
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-        final int connectionStatusCode =
-                apiAvailability.isGooglePlayServicesAvailable(App.getAppContext());
+        final int connectionStatusCode = apiAvailability.isGooglePlayServicesAvailable(this);
         if (apiAvailability.isUserResolvableError(connectionStatusCode)) {
             showGooglePlayServicesAvailabilityErrorDialog(connectionStatusCode);
         }
@@ -120,8 +123,8 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
     @Override
     @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
     public void chooseGoogleAccount() {
-        if (EasyPermissions.hasPermissions(App.getAppContext(), Manifest.permission.GET_ACCOUNTS)) {
-            String accountName = UserPrefs.getAccountName();
+        if (EasyPermissions.hasPermissions(this, Manifest.permission.GET_ACCOUNTS)) {
+            String accountName = userPrefs.getAccountName();
             if (accountName != null) {
                 setSelectedAccountName(accountName);
                 onPermissionsGranted();
@@ -141,18 +144,6 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
         }
     }
 
-    /**
-     * Called when an activity launched here (specifically, AccountPicker
-     * and authorization) exits, giving you the requestCode you started it with,
-     * the resultCode it returned, and any additional data from it.
-     *
-     * @param requestCode code indicating which activity result is incoming.
-     * @param resultCode  code indicating the result of the incoming
-     *                    activity result.
-     * @param data        Intent (containing result data) returned by incoming
-     *                    activity result.
-     * @return true if the result was processed, false otherwise
-     */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -171,7 +162,7 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
                     String accountName =
                             data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
                     if (accountName != null) {
-                        UserPrefs.setAccountName(accountName);
+                        userPrefs.setAccountName(accountName);
                         setSelectedAccountName(accountName);
                         onPermissionsGranted();
                     }

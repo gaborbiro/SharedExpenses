@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
@@ -29,19 +30,22 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 public class EditExpenseDialog extends MaterialDialog {
 
     private static final NumberFormat LOCAL_CURRENCY = DecimalFormat.getCurrencyInstance();
 
-    public static void show(@NonNull Context context, final GoogleApiScreen googleApiScreen, final ProgressScreen progressScreen, final MainScreen mainScreen, final GoogleAccountCredential credential) {
-        new EditExpenseDialog.Builder(context, googleApiScreen, progressScreen, mainScreen, credential).build().show();
+    public static void show(@NonNull Context context) {
+        new EditExpenseDialogBuilder(context, null).build().show();
     }
 
-    public static void show(@NonNull Context context, final GoogleApiScreen googleApiScreen, final ProgressScreen progressScreen, final MainScreen mainScreen, final GoogleAccountCredential credential, ExpenseItem expenseItem) {
-        new EditExpenseDialog.Builder(context, googleApiScreen, progressScreen, mainScreen, credential, expenseItem).build().show();
+    public static void show(@NonNull Context context, ExpenseItem expenseItem) {
+        new EditExpenseDialogBuilder(context, expenseItem).build().show();
     }
 
-    protected EditExpenseDialog(Builder builder) {
+    protected EditExpenseDialog(EditExpenseDialogBuilder builder) {
         super(builder);
     }
 
@@ -52,14 +56,19 @@ public class EditExpenseDialog extends MaterialDialog {
     //            | |_) | |_| | | | (_| |  __/ |
     //            |____/ \__,_|_|_|\__,_|\___|_|
     //
-    public static class Builder extends MaterialDialog.Builder {
+    public static class EditExpenseDialogBuilder extends MaterialDialog.Builder {
 
-        private ExpenseItem expenseItem;
+        @Inject UserPrefs userPrefs;
 
-        private ProgressScreen progressScreen;
-        private GoogleApiScreen googleApiScreen;
-        private MainScreen mainScreen;
-        private GoogleAccountCredential credential;
+        private final ExpenseItem expenseItem;
+
+        @Inject ProgressScreen progressScreen;
+        @Inject GoogleApiScreen googleApiScreen;
+        @Inject MainScreen mainScreen;
+        @Inject GoogleAccountCredential credential;
+        @Inject Provider<DeleteExpensesTask> deleteExpensesTaskProvider;
+        @Inject Provider<InsertExpensesTask> insertExpensesTaskProvider;
+        @Inject Provider<UpdateExpensesTask> updateExpensesTaskProvider;
 
         private View layout;
         private EditText descriptionField;
@@ -68,17 +77,10 @@ public class EditExpenseDialog extends MaterialDialog {
         private EditText commentField;
         private DatePicker datePicker;
 
-        public Builder(@NonNull Context context, final GoogleApiScreen googleApiScreen, final ProgressScreen progressScreen, final MainScreen mainScreen, final GoogleAccountCredential credential) {
-            this(context, googleApiScreen, progressScreen, mainScreen, credential, null);
-        }
-
-        public Builder(@NonNull Context context, final GoogleApiScreen googleApiScreen, final ProgressScreen progressScreen, final MainScreen mainScreen, final GoogleAccountCredential credential, final ExpenseItem expenseItem) {
+        public EditExpenseDialogBuilder(Context context, final ExpenseItem expenseItem) {
             super(context);
+            App.component.inject(this);
             this.expenseItem = expenseItem;
-            this.googleApiScreen = googleApiScreen;
-            this.progressScreen = progressScreen;
-            this.mainScreen = mainScreen;
-            this.credential = credential;
 
             layout = LayoutInflater.from(context).inflate(R.layout.expense_details_dialog, null);
             descriptionField = (EditText) layout.findViewById(R.id.description);
@@ -87,7 +89,7 @@ public class EditExpenseDialog extends MaterialDialog {
             commentField = (EditText) layout.findViewById(R.id.comment);
             datePicker = (DatePicker) layout.findViewById(R.id.date_picker);
 
-            String selectedTenant = UserPrefs.getSelectedTenant();
+            String selectedTenant = userPrefs.getSelectedTenant();
 
             if (!TextUtils.isEmpty(selectedTenant)) {
                 title(context.getString(R.string.add_new_expense_as, selectedTenant));
@@ -123,7 +125,7 @@ public class EditExpenseDialog extends MaterialDialog {
                 onNegative(new MaterialDialog.SingleButtonCallback() {
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        new DeleteExpensesTask(googleApiScreen, progressScreen, mainScreen, credential).execute(expenseItem);
+                        deleteExpensesTaskProvider.get().execute(expenseItem);
                         dialog.dismiss();
                     }
                 });
@@ -147,7 +149,7 @@ public class EditExpenseDialog extends MaterialDialog {
         }
 
         private void onSubmitDialog(@NonNull MaterialDialog dialog) {
-            String buyer = UserPrefs.getSelectedTenant();
+            String buyer = userPrefs.getSelectedTenant();
             String description = descriptionField.getText().toString();
 
             if (TextUtils.isEmpty(description)) {
@@ -173,7 +175,7 @@ public class EditExpenseDialog extends MaterialDialog {
 
             if (expenseItem == null) {
                 ExpenseItem entry = new ExpenseItem(buyer, description, currency + price, selectedDate.getTime(), comment);
-                new InsertExpensesTask(googleApiScreen, progressScreen, mainScreen, credential).execute(entry);
+                insertExpensesTaskProvider.get().execute(entry);
             } else {
                 String[] currencyPrice = splitCurrency(expenseItem.price);
                 currencyPrice[0] = currency;
@@ -181,7 +183,7 @@ public class EditExpenseDialog extends MaterialDialog {
                 ExpenseItem entry = new ExpenseItem(expenseItem.index, expenseItem.buyer, description, concat(currencyPrice), selectedDate.getTime(), comment);
 
                 if (!entry.equals(expenseItem)) {
-                    new UpdateExpensesTask(googleApiScreen, progressScreen, mainScreen, credential).execute(entry);
+                    updateExpensesTaskProvider.get().execute(entry);
                 } else {
                     progressScreen.toast(R.string.nothing_changed);
                 }

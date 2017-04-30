@@ -1,16 +1,26 @@
 package com.gaborbiro.sharedexpenses;
 
-import com.gaborbiro.sharedexpenses.util.PrefsUtil;
+import com.gaborbiro.sharedexpenses.util.PrefsHelper;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+@Singleton
 public class AppPrefs {
 
     private static final String PREF_TENANTS = "com.gaborbiro.sharedexpenses.PREF_TENANTS";
+    private final PrefsHelper prefsHelper;
 
-    public static String[] getTenants() {
-        return PrefsUtil.get(PREF_TENANTS, (String[]) null);
+    @Inject
+    public AppPrefs(PrefsHelper prefsHelper) {
+        this.prefsHelper = prefsHelper;
     }
 
-    public static void setTenants(String[] tenants) {
-        PrefsUtil.put(PREF_TENANTS, tenants);
+    public String[] getTenants() {
+        return prefsHelper.get(PREF_TENANTS, (String[]) null);
+    }
+
+    public void setTenants(String[] tenants) {
+        prefsHelper.put(PREF_TENANTS, tenants);
     }
 }
