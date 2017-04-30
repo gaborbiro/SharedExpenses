@@ -2,7 +2,7 @@ package com.gaborbiro.sharedexpenses.model;
 
 import java.util.Date;
 
-import static com.gaborbiro.sharedexpenses.service.ExpenseApiImpl.DATE_FORMAT;
+import static com.gaborbiro.sharedexpenses.api.ExpenseApiImpl.DATE_FORMAT;
 
 public class ExpenseItem {
     public final int index;

@@ -5,7 +5,7 @@ import android.text.TextUtils;
 
 import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.service.ExpenseApiImpl;
+import com.gaborbiro.sharedexpenses.api.ExpenseApiImpl;
 import com.gaborbiro.sharedexpenses.util.AssetUtils;
 
 import java.io.IOException;

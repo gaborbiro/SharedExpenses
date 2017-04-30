@@ -3,7 +3,7 @@ package com.gaborbiro.sharedexpenses.tasks;
 import com.gaborbiro.sharedexpenses.AppPrefs;
 import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.service.ExpenseApi;
+import com.gaborbiro.sharedexpenses.api.ExpenseApi;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;

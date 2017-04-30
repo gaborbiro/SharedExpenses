@@ -4,8 +4,8 @@ import android.app.Application;
 import android.content.Context;
 
 import com.gaborbiro.sharedexpenses.App;
-import com.gaborbiro.sharedexpenses.service.ExpenseApi;
-import com.gaborbiro.sharedexpenses.service.ExpenseApiImpl;
+import com.gaborbiro.sharedexpenses.api.ExpenseApi;
+import com.gaborbiro.sharedexpenses.api.ExpenseApiImpl;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;

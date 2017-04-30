@@ -12,6 +12,10 @@ import javax.inject.Inject;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
@@ -42,4 +46,11 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     protected abstract void inject();
+
+    protected <O> Observable<O> prepare(Observable<O> observable) {
+        return observable
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .takeUntil(PublishSubject.create());
+    }
 }

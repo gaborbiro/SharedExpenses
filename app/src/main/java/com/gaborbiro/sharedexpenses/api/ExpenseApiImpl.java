@@ -1,4 +1,4 @@
-package com.gaborbiro.sharedexpenses.service;
+package com.gaborbiro.sharedexpenses.api;
 
 import com.gaborbiro.sharedexpenses.Constants;
 import com.gaborbiro.sharedexpenses.SpreadsheetException;
