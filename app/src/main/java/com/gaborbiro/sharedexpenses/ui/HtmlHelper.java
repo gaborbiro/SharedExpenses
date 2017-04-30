@@ -3,7 +3,6 @@ package com.gaborbiro.sharedexpenses.ui;
 import android.content.Context;
 import android.text.TextUtils;
 
-import com.gaborbiro.sharedexpenses.Constants;
 import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.service.ExpenseApiImpl;
@@ -29,7 +28,7 @@ public class HtmlHelper {
     public HtmlHelper() {}
 
     public String getHtmlTableFromExpense(ExpenseItem[] expenses) throws IOException {
-        final String sort = userPrefs.getSort(Constants.DEFAULT_SORT);
+        final String sort = userPrefs.getSort();
         ExpenseItem[] copy = new ExpenseItem[expenses.length];
         System.arraycopy(expenses, 0, copy, 0, expenses.length);
 
@@ -37,7 +36,7 @@ public class HtmlHelper {
             @Override
             public int compare(ExpenseItem o1, ExpenseItem o2) {
                 int result = 0;
-                if (Objects.equals(sort, Constants.SORT_USER)) {
+                if (Objects.equals(sort, UserPrefs.SORT_USER)) {
                     result = o2.buyer.compareTo(o1.buyer);
 
                     if (result == 0) {
@@ -78,7 +77,7 @@ public class HtmlHelper {
         String currentUser = null;
 
         for (ExpenseItem expense : expenses) {
-            if (Objects.equals(sort, Constants.SORT_USER)) {
+            if (Objects.equals(sort, UserPrefs.SORT_USER)) {
                 if (expense.buyer != null && !expense.buyer.equals(currentUser)) {
                     result.append(String.format(sectionHeader, expense.buyer));
                     currentUser = expense.buyer;
@@ -98,7 +97,7 @@ public class HtmlHelper {
                 }
             }
             String dateOrBuyer;
-            if (Objects.equals(sort, Constants.SORT_USER)) {
+            if (Objects.equals(sort, UserPrefs.SORT_USER)) {
                 if (expense.date != null) {
                     dateOrBuyer = ExpenseApiImpl.DATE_FORMAT.format(expense.date);
                 } else {

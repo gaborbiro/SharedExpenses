@@ -14,7 +14,6 @@ import android.webkit.WebView;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.BuildConfig;
-import com.gaborbiro.sharedexpenses.Constants;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.tasks.FetchExpensesTask;
@@ -117,20 +116,8 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
 
         switch (id) {
             case R.id.action_sort_by:
-                String newSort;
-                switch (userPrefs.getSort(Constants.DEFAULT_SORT)) {
-                    case Constants.SORT_DATE:
-                        newSort = Constants.SORT_USER;
-                        break;
-                    case Constants.SORT_USER:
-                        newSort = Constants.SORT_DATE;
-                        break;
-                    default:
-                        newSort = Constants.DEFAULT_SORT;
-                        break;
-                }
-                toast(getString(R.string.sorting_by, newSort));
-                userPrefs.setSort(newSort);
+                userPrefs.toggleSort();
+                toast(getString(R.string.sorting_by, userPrefs.getSort()));
                 update();
                 break;
             case R.id.action_refresh:

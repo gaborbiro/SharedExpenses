@@ -5,12 +5,17 @@ import com.gaborbiro.sharedexpenses.util.PrefsHelper;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import static com.gaborbiro.sharedexpenses.UserPrefs.Strings.ACCOUNT_NAME;
+import static com.gaborbiro.sharedexpenses.UserPrefs.Strings.SELECTED_TENANT;
+import static com.gaborbiro.sharedexpenses.UserPrefs.Strings.SORT;
+
 @Singleton
 public class UserPrefs {
-    private static final String PREF_ACCOUNT_NAME = "com.gaborbiro.sharedexpenses.PREF_ACCOUNT_NAME";
-    private static final String PREF_SELECTED_TENANT = "com.gaborbiro.sharedexpenses.PREF_SELECTED_TENANT";
-    private static final String PREF_SORT = "com.gaborbiro.sharedexpenses.PREF_SORT";
+
     private final PrefsHelper prefsHelper;
+
+    public static final String SORT_DATE = "date";
+    public static final String SORT_USER = "user";
 
     @Inject
     public UserPrefs(PrefsHelper prefsHelper) {
@@ -18,26 +23,60 @@ public class UserPrefs {
     }
 
     public String getAccountName() {
-        return prefsHelper.get(PREF_ACCOUNT_NAME, (String) null);
+        return get(ACCOUNT_NAME);
     }
 
     public void setAccountName(String name) {
-        prefsHelper.put(PREF_ACCOUNT_NAME, name);
+        put(ACCOUNT_NAME, name);
     }
 
     public String getSelectedTenant() {
-        return prefsHelper.get(PREF_SELECTED_TENANT, (String) null);
+        return get(SELECTED_TENANT);
     }
 
     public void setSelectedTenant(String tenant) {
-        prefsHelper.put(PREF_SELECTED_TENANT, tenant);
+        put(SELECTED_TENANT, tenant);
     }
 
-    public String getSort(String default_) {
-        return prefsHelper.get(PREF_SORT, default_);
+    public String getSort() {
+        return get(SORT);
     }
 
     public void setSort(String sort) {
-        prefsHelper.put(PREF_SORT, sort);
+        put(SORT, sort);
+    }
+
+    public void toggleSort() {
+        String sort = getSort();
+        switch (sort) {
+            case SORT_DATE:
+                setSort(UserPrefs.SORT_USER);
+                break;
+            case UserPrefs.SORT_USER:
+                setSort(UserPrefs.SORT_DATE);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private String get(Strings key) {
+        return prefsHelper.get(key.name(), key.defaultValue);
+    }
+
+    private void put(Strings key, String value) {
+        prefsHelper.put(key.name(), value);
+    }
+
+    enum Strings {
+        ACCOUNT_NAME(null),
+        SELECTED_TENANT(null),
+        SORT(SORT_DATE);
+
+        private String defaultValue;
+
+        Strings(String defaultValue) {
+            this.defaultValue = defaultValue;
+        }
     }
 }
