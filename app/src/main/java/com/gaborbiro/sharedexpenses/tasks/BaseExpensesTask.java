@@ -6,7 +6,7 @@ import com.gaborbiro.sharedexpenses.AppPrefs;
 import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.service.ExpenseApi;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
-import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
@@ -19,17 +19,17 @@ public abstract class BaseExpensesTask<I, O> extends AsyncTask<I, Void, O> {
     protected UserPrefs userPrefs;
     protected GoogleApiScreen googleApiScreen;
     protected ProgressScreen progressScreen;
-    protected MainScreen mainScreen;
+    protected WebScreen webScreen;
     protected ExpenseApi service;
 
     private IOException lastError;
 
-    public BaseExpensesTask(AppPrefs appPrefs, UserPrefs userPrefs, GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, MainScreen mainScreen, ExpenseApi service) {
+    public BaseExpensesTask(AppPrefs appPrefs, UserPrefs userPrefs, GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, WebScreen webScreen, ExpenseApi service) {
         this.appPrefs = appPrefs;
         this.userPrefs = userPrefs;
         this.googleApiScreen = googleApiScreen;
         this.progressScreen = progressScreen;
-        this.mainScreen = mainScreen;
+        this.webScreen = webScreen;
         this.service = service;
     }
 

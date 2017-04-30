@@ -2,10 +2,7 @@ package com.gaborbiro.sharedexpenses.di;
 
 import android.app.Application;
 
-import com.gaborbiro.sharedexpenses.tasks.BaseExpensesTask;
-import com.gaborbiro.sharedexpenses.ui.activity.BaseActivity;
-import com.gaborbiro.sharedexpenses.ui.activity.MainActivity;
-import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.WebActivity;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
 
 import javax.inject.Singleton;
@@ -22,10 +19,10 @@ public interface SharedExpensesComponent {
         @BindsInstance
         Builder application(Application application);
 
-       SharedExpensesComponent build();
+        SharedExpensesComponent build();
     }
 
-    void inject(MainActivity baseActivity);
+    void inject(WebActivity baseActivity);
 
     void inject(EditExpenseDialog.EditExpenseDialogBuilder editExpenseDialogBuilder);
 }

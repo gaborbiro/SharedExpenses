@@ -7,7 +7,7 @@ import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.service.ExpenseApi;
 import com.gaborbiro.sharedexpenses.service.ExpenseApiImpl;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
-import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.util.ExponentialBackOff;
@@ -46,8 +46,8 @@ public class SharedExpensesModule {
     }
 
     @Provides
-    public MainScreen provideMainScreen(App app) {
-        return app.getMainScreen();
+    public WebScreen provideWebScreen(App app) {
+        return app.getWebScreen();
     }
 
     @Provides

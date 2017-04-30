@@ -31,7 +31,7 @@ import javax.inject.Provider;
 
 import butterknife.BindView;
 
-public class MainActivity extends GoogleApiActivity implements MainScreen {
+public class WebActivity extends GoogleApiActivity implements WebScreen {
 
     @Inject Provider<FetchExpensesTask> fetchExpensesTaskProvider;
     @Inject Provider<FetchTenantNamesTask> fetchTenantNamesTaskProvider;
@@ -44,15 +44,15 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
 
         @JavascriptInterface
         public void update(final int index) {
-            EditExpenseDialog.show(MainActivity.this, expenses.get(index));
+            EditExpenseDialog.show(WebActivity.this, expenses.get(index));
         }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        app.setMainScreen(this);
-        setContentView(com.gaborbiro.sharedexpenses.R.layout.activity_main);
+        app.setWebScreen(this);
+        setContentView(com.gaborbiro.sharedexpenses.R.layout.activity_web);
 
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setWebChromeClient(new WebChromeClient());
@@ -69,7 +69,7 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EditExpenseDialog.show(MainActivity.this);
+                EditExpenseDialog.show(WebActivity.this);
             }
         });
         update();
@@ -83,13 +83,13 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
     @Override
     protected void onStart() {
         super.onStart();
-        app.setMainScreen(this);
+        app.setWebScreen(this);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        app.setMainScreen(null);
+        app.setWebScreen(null);
     }
 
     @Override

@@ -2,7 +2,7 @@ package com.gaborbiro.sharedexpenses.ui.activity;
 
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 
-public interface MainScreen {
+public interface WebScreen {
 
     void chooseTenant();
 

@@ -5,14 +5,14 @@ import android.app.Application;
 import com.gaborbiro.sharedexpenses.di.DaggerSharedExpensesComponent;
 import com.gaborbiro.sharedexpenses.di.SharedExpensesComponent;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
-import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 
 public class App extends Application {
 
     private GoogleApiScreen googleApiScreen;
     private ProgressScreen progressScreen;
-    private MainScreen mainScreen;
+    private WebScreen webScreen;
 
     public static SharedExpensesComponent component;
 
@@ -38,11 +38,11 @@ public class App extends Application {
         this.progressScreen = progressScreen;
     }
 
-    public MainScreen getMainScreen() {
-        return mainScreen;
+    public WebScreen getWebScreen() {
+        return webScreen;
     }
 
-    public void setMainScreen(MainScreen mainScreen) {
-        this.mainScreen = mainScreen;
+    public void setWebScreen(WebScreen webScreen) {
+        this.webScreen = webScreen;
     }
 }

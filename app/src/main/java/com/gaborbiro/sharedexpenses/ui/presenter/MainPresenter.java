@@ -1,12 +1,12 @@
 package com.gaborbiro.sharedexpenses.ui.presenter;
 
-import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 
 public class MainPresenter {
 
-    MainScreen screen;
+    WebScreen screen;
 
-    public MainPresenter(MainScreen screen) {
+    public MainPresenter(WebScreen screen) {
         this.screen = screen;
     }
 }

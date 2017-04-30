@@ -5,7 +5,7 @@ import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.service.ExpenseApi;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
-import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 
 import java.io.IOException;
@@ -15,8 +15,8 @@ import javax.inject.Inject;
 public class FetchExpensesTask extends BaseExpensesTask<Void, ExpenseItem[]> {
 
     @Inject
-    public FetchExpensesTask(AppPrefs appPrefs, UserPrefs userPrefs, GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, MainScreen mainScreen, ExpenseApi expenseApi) {
-        super(appPrefs, userPrefs, googleApiScreen, progressScreen, mainScreen, expenseApi);
+    public FetchExpensesTask(AppPrefs appPrefs, UserPrefs userPrefs, GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, WebScreen webScreen, ExpenseApi expenseApi) {
+        super(appPrefs, userPrefs, googleApiScreen, progressScreen, webScreen, expenseApi);
     }
 
     @Override
@@ -27,6 +27,6 @@ public class FetchExpensesTask extends BaseExpensesTask<Void, ExpenseItem[]> {
     @Override
     protected void onPostExecute(ExpenseItem[] output) {
         super.onPostExecute(output);
-        mainScreen.setExpenses(output);
+        webScreen.setExpenses(output);
     }
 }

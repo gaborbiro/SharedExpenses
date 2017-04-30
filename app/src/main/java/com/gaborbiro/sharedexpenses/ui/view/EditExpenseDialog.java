@@ -20,7 +20,7 @@ import com.gaborbiro.sharedexpenses.tasks.DeleteExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.InsertExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.UpdateExpensesTask;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
-import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
@@ -64,7 +64,7 @@ public class EditExpenseDialog extends MaterialDialog {
 
         @Inject ProgressScreen progressScreen;
         @Inject GoogleApiScreen googleApiScreen;
-        @Inject MainScreen mainScreen;
+        @Inject WebScreen webScreen;
         @Inject GoogleAccountCredential credential;
         @Inject Provider<DeleteExpensesTask> deleteExpensesTaskProvider;
         @Inject Provider<InsertExpensesTask> insertExpensesTaskProvider;
