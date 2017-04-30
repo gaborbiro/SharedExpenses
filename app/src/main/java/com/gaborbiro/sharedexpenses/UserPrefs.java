@@ -3,9 +3,9 @@ package com.gaborbiro.sharedexpenses;
 import com.gaborbiro.sharedexpenses.util.PrefsUtil;
 
 public class UserPrefs {
-    private static final String PREF_ACCOUNT_NAME = "com.gaborbiro.sharedexpenses.util.PREF_ACCOUNT_NAME";
-    private static final String PREF_SELECTED_TENANT = "com.gaborbiro.sharedexpenses.util.PREF_SELECTED_TENANT";
-    private static final String PREF_SORT = "com.gaborbiro.sharedexpenses.util.PREF_SORT";
+    private static final String PREF_ACCOUNT_NAME = "com.gaborbiro.sharedexpenses.PREF_ACCOUNT_NAME";
+    private static final String PREF_SELECTED_TENANT = "com.gaborbiro.sharedexpenses.PREF_SELECTED_TENANT";
+    private static final String PREF_SORT = "com.gaborbiro.sharedexpenses.PREF_SORT";
 
     public static String getAccountName() {
         return PrefsUtil.get(PREF_ACCOUNT_NAME, (String) null);

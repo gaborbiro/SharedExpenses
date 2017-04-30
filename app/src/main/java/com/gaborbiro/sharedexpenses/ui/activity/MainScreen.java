@@ -1,8 +1,8 @@
-package com.gaborbiro.sharedexpenses.ui.screen;
+package com.gaborbiro.sharedexpenses.ui.activity;
 
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 
-public interface MainScreen extends GoogleApiScreen {
+public interface MainScreen {
 
     void chooseTenant();
 

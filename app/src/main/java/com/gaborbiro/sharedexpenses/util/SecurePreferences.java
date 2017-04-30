@@ -237,8 +237,7 @@ final class SecurePreferences
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
                                           String key) {
         if (listeners.containsKey(key)) {
-            listeners.get(key)
-                    .onSharedPreferenceChanged(sharedPreferences, key);
+            listeners.get(key).onSharedPreferenceChanged(sharedPreferences, key);
         }
     }
 

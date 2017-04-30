@@ -18,7 +18,9 @@ import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.tasks.DeleteExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.InsertExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.UpdateExpensesTask;
-import com.gaborbiro.sharedexpenses.ui.screen.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
 import java.text.DecimalFormat;
@@ -31,12 +33,12 @@ public class EditExpenseDialog extends MaterialDialog {
 
     private static final NumberFormat LOCAL_CURRENCY = DecimalFormat.getCurrencyInstance();
 
-    public static void show(@NonNull Context context, final MainScreen screen, final GoogleAccountCredential credential) {
-        new EditExpenseDialog.Builder(context, screen, credential).build().show();
+    public static void show(@NonNull Context context, final GoogleApiScreen googleApiScreen, final ProgressScreen progressScreen, final MainScreen mainScreen, final GoogleAccountCredential credential) {
+        new EditExpenseDialog.Builder(context, googleApiScreen, progressScreen, mainScreen, credential).build().show();
     }
 
-    public static void show(@NonNull Context context, final MainScreen screen, final GoogleAccountCredential credential, ExpenseItem expenseItem) {
-        new EditExpenseDialog.Builder(context, screen, credential, expenseItem).build().show();
+    public static void show(@NonNull Context context, final GoogleApiScreen googleApiScreen, final ProgressScreen progressScreen, final MainScreen mainScreen, final GoogleAccountCredential credential, ExpenseItem expenseItem) {
+        new EditExpenseDialog.Builder(context, googleApiScreen, progressScreen, mainScreen, credential, expenseItem).build().show();
     }
 
     protected EditExpenseDialog(Builder builder) {
@@ -54,7 +56,9 @@ public class EditExpenseDialog extends MaterialDialog {
 
         private ExpenseItem expenseItem;
 
-        private MainScreen screen;
+        private ProgressScreen progressScreen;
+        private GoogleApiScreen googleApiScreen;
+        private MainScreen mainScreen;
         private GoogleAccountCredential credential;
 
         private View layout;
@@ -64,14 +68,16 @@ public class EditExpenseDialog extends MaterialDialog {
         private EditText commentField;
         private DatePicker datePicker;
 
-        public Builder(@NonNull Context context, final MainScreen screen, final GoogleAccountCredential credential) {
-            this(context, screen, credential, null);
+        public Builder(@NonNull Context context, final GoogleApiScreen googleApiScreen, final ProgressScreen progressScreen, final MainScreen mainScreen, final GoogleAccountCredential credential) {
+            this(context, googleApiScreen, progressScreen, mainScreen, credential, null);
         }
 
-        public Builder(@NonNull Context context, final MainScreen screen, final GoogleAccountCredential credential, final ExpenseItem expenseItem) {
+        public Builder(@NonNull Context context, final GoogleApiScreen googleApiScreen, final ProgressScreen progressScreen, final MainScreen mainScreen, final GoogleAccountCredential credential, final ExpenseItem expenseItem) {
             super(context);
             this.expenseItem = expenseItem;
-            this.screen = screen;
+            this.googleApiScreen = googleApiScreen;
+            this.progressScreen = progressScreen;
+            this.mainScreen = mainScreen;
             this.credential = credential;
 
             layout = LayoutInflater.from(context).inflate(R.layout.expense_details_dialog, null);
@@ -117,7 +123,7 @@ public class EditExpenseDialog extends MaterialDialog {
                 onNegative(new MaterialDialog.SingleButtonCallback() {
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        new DeleteExpensesTask(screen, credential).execute(expenseItem);
+                        new DeleteExpensesTask(googleApiScreen, progressScreen, mainScreen, credential).execute(expenseItem);
                         dialog.dismiss();
                     }
                 });
@@ -145,12 +151,12 @@ public class EditExpenseDialog extends MaterialDialog {
             String description = descriptionField.getText().toString();
 
             if (TextUtils.isEmpty(description)) {
-                screen.toast(R.string.error_description);
+                progressScreen.toast(R.string.error_description);
                 return;
             }
 
             if (TextUtils.isEmpty(priceField.getText().toString())) {
-                screen.toast(R.string.error_price);
+                progressScreen.toast(R.string.error_price);
                 return;
             }
             String currency = currencyField.getText().toString();
@@ -167,7 +173,7 @@ public class EditExpenseDialog extends MaterialDialog {
 
             if (expenseItem == null) {
                 ExpenseItem entry = new ExpenseItem(buyer, description, currency + price, selectedDate.getTime(), comment);
-                new InsertExpensesTask(screen, credential).execute(entry);
+                new InsertExpensesTask(googleApiScreen, progressScreen, mainScreen, credential).execute(entry);
             } else {
                 String[] currencyPrice = splitCurrency(expenseItem.price);
                 currencyPrice[0] = currency;
@@ -175,9 +181,9 @@ public class EditExpenseDialog extends MaterialDialog {
                 ExpenseItem entry = new ExpenseItem(expenseItem.index, expenseItem.buyer, description, concat(currencyPrice), selectedDate.getTime(), comment);
 
                 if (!entry.equals(expenseItem)) {
-                    new UpdateExpensesTask(screen, credential).execute(entry);
+                    new UpdateExpensesTask(googleApiScreen, progressScreen, mainScreen, credential).execute(entry);
                 } else {
-                    screen.toast(R.string.nothing_changed);
+                    progressScreen.toast(R.string.nothing_changed);
                 }
             }
             dialog.dismiss();

@@ -12,17 +12,16 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.gaborbiro.sharedexpenses.AppPrefs;
 import com.gaborbiro.sharedexpenses.BuildConfig;
 import com.gaborbiro.sharedexpenses.Constants;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.model.Tenants;
 import com.gaborbiro.sharedexpenses.tasks.FetchExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.FetchTenantNamesTask;
 import com.gaborbiro.sharedexpenses.ui.HtmlUtil;
 import com.gaborbiro.sharedexpenses.ui.presenter.MainPresenter;
-import com.gaborbiro.sharedexpenses.ui.screen.MainScreen;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
 
 import java.io.IOException;
@@ -30,12 +29,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.Unbinder;
 
 public class MainActivity extends GoogleApiActivity implements MainScreen {
-
-    private Unbinder unbinder;
 
     @BindView(R.id.webview) WebView webView;
 
@@ -46,12 +41,7 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
 
         @JavascriptInterface
         public void update(final int index) {
-            webView.post(new Runnable() {
-                @Override
-                public void run() {
-                    EditExpenseDialog.show(MainActivity.this, MainActivity.this, credential, expenses.get(index));
-                }
-            });
+            EditExpenseDialog.show(MainActivity.this, MainActivity.this, MainActivity.this, MainActivity.this, credential, expenses.get(index));
         }
     }
 
@@ -77,24 +67,10 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EditExpenseDialog.show(MainActivity.this, MainActivity.this, credential);
+                EditExpenseDialog.show(MainActivity.this, MainActivity.this, MainActivity.this, MainActivity.this, credential);
             }
         });
         update();
-    }
-
-    @Override
-    public void onContentChanged() {
-        super.onContentChanged();
-        unbinder = ButterKnife.bind(this);
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (unbinder != null) {
-            unbinder.unbind();
-        }
-        super.onDestroy();
     }
 
     @Override
@@ -104,8 +80,8 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
 
     public void update() {
         if (googleApiPresenter.verifyApiAccess()) {
-            new FetchExpensesTask(this, credential).execute();
-            new FetchTenantNamesTask(this, credential).execute();
+            new FetchExpensesTask(this, this, this, credential).execute();
+            new FetchTenantNamesTask(this, this, this, credential).execute();
         }
     }
 
@@ -145,7 +121,7 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
     }
 
     public void chooseTenant() {
-        new MaterialDialog.Builder(this).items(Tenants.getTenants()).itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
+        new MaterialDialog.Builder(this).items(AppPrefs.getTenants()).itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
             @Override
             public boolean onSelection(MaterialDialog dialog, View itemView, int which, CharSequence text) {
                 UserPrefs.setSelectedTenant(text.toString());

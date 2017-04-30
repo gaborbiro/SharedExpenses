@@ -4,20 +4,14 @@ import android.Manifest;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.v7.app.AppCompatActivity;
-import android.widget.Toast;
 
 import com.gaborbiro.sharedexpenses.App;
-import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.ui.presenter.GoogleApiPresenter;
-import com.gaborbiro.sharedexpenses.ui.screen.GoogleApiScreen;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -30,7 +24,7 @@ import java.util.List;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public abstract class GoogleApiActivity extends AppCompatActivity implements GoogleApiScreen, EasyPermissions.PermissionCallbacks {
+public abstract class GoogleApiActivity extends ProgressActivity implements GoogleApiScreen, EasyPermissions.PermissionCallbacks {
 
     public static final int REQUEST_ACCOUNT_PICKER = 1000;
     public static final int REQUEST_AUTHORIZATION = 1001;
@@ -43,48 +37,13 @@ public abstract class GoogleApiActivity extends AppCompatActivity implements Goo
 
     GoogleApiPresenter googleApiPresenter;
 
-    private ProgressDialog progressDialog;
-    private int progressCount;
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.googleApiPresenter = new GoogleApiPresenter(this);
+        this.googleApiPresenter = new GoogleApiPresenter(this, this);
         // Initialize credentials and service object.
         credential = GoogleAccountCredential.usingOAuth2(App.getAppContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
-
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage(getString(R.string.please_wait));
-    }
-
-    @Override
-    public void showProgress() {
-        progressCount++;
-        progressDialog.show();
-    }
-
-    @Override
-    public void hideProgress() {
-        if (--progressCount <= 0) {
-            progressDialog.hide();
-            progressCount = 0;
-        }
-    }
-
-    @Override
-    public void toast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void toast(@StringRes int message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void toast(@StringRes int message, Object... formatArgs) {
-        toast(getString(message, formatArgs));
     }
 
     @Override

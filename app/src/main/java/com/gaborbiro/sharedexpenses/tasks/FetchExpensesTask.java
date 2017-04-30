@@ -1,29 +1,27 @@
 package com.gaborbiro.sharedexpenses.tasks;
 
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.ui.screen.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
-public class FetchExpensesTask extends BaseSheetsTask<Void, ExpenseItem[]> {
+import java.io.IOException;
 
-    public FetchExpensesTask(MainScreen screen, GoogleAccountCredential credential) {
-        super(screen, credential);
+public class FetchExpensesTask extends BaseExpendesTask<Void, ExpenseItem[]> {
+
+    public FetchExpensesTask(GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, MainScreen mainScreen, GoogleAccountCredential credential) {
+        super(googleApiScreen, progressScreen, mainScreen, credential);
     }
 
     @Override
-    protected ExpenseItem[] doInBackground(Void... params) {
-        try {
-            return service.fetchExpenses();
-        } catch (Exception e) {
-            mLastError = e;
-            cancel(true);
-            return null;
-        }
+    protected ExpenseItem[] work(Void... params) throws IOException {
+        return service.fetchExpenses();
     }
 
     @Override
     protected void onPostExecute(ExpenseItem[] output) {
         super.onPostExecute(output);
-        screen.setExpenses(output);
+        mainScreen.setExpenses(output);
     }
 }

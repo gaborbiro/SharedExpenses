@@ -1,14 +1,17 @@
 package com.gaborbiro.sharedexpenses.ui.presenter;
 
-import com.gaborbiro.sharedexpenses.ui.screen.GoogleApiScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.gaborbiro.sharedexpenses.util.ConnectivityUtil;
 
 public class GoogleApiPresenter {
 
-    private GoogleApiScreen screen;
+    private GoogleApiScreen googleApiScreen;
+    private ProgressScreen progressScreen;
 
-    public GoogleApiPresenter(GoogleApiScreen screen) {
-        this.screen = screen;
+    public GoogleApiPresenter(GoogleApiScreen googleApiScreen, ProgressScreen progressScreen) {
+        this.googleApiScreen = googleApiScreen;
+        this.progressScreen = progressScreen;
     }
 
     /**
@@ -19,14 +22,14 @@ public class GoogleApiPresenter {
      * appropriate.
      */
     public boolean verifyApiAccess() {
-        if (!screen.isGooglePlayServicesAvailable()) {
-            screen.acquireGooglePlayServices();
+        if (!googleApiScreen.isGooglePlayServicesAvailable()) {
+            googleApiScreen.acquireGooglePlayServices();
             return false;
-        } else if (screen.getSelectedAccountName() == null) {
-            screen.chooseGoogleAccount();
+        } else if (googleApiScreen.getSelectedAccountName() == null) {
+            googleApiScreen.chooseGoogleAccount();
             return false;
         } else if (!ConnectivityUtil.isDeviceOnline()) {
-            screen.error("No network connection available.");
+            progressScreen.error("No network connection available.");
             return false;
         } else {
             return true;

@@ -133,7 +133,11 @@ public class PrefsUtil {
 
 
     public static void put(String key, String[] values) {
-        put(key, TextUtils.join(SEPARATOR, values));
+        if (values == null) {
+            put(key, (String) null);
+        } else {
+            put(key, TextUtils.join(SEPARATOR, values));
+        }
     }
 
 
@@ -150,7 +154,11 @@ public class PrefsUtil {
 
 
     public static void put(String key, String value) {
-        getSecurePreferences().put(key, value);
+        if (value == null) {
+            getSecurePreferences().removeValue(key);
+        } else {
+            getSecurePreferences().put(key, value);
+        }
     }
 
 
@@ -167,8 +175,7 @@ public class PrefsUtil {
 
     public static int get(String key, int defaultValue) {
         String value = getSecurePreferences().getString(key);
-        return TextUtils.isEmpty(value) ? defaultValue : Integer.valueOf(value)
-                .intValue();
+        return TextUtils.isEmpty(value) ? defaultValue : Integer.valueOf(value);
     }
 
 
@@ -179,8 +186,7 @@ public class PrefsUtil {
 
     public static long get(String key, long defaultValue) {
         String value = getSecurePreferences().getString(key);
-        return TextUtils.isEmpty(value) ? defaultValue : Long.valueOf(value)
-                .longValue();
+        return TextUtils.isEmpty(value) ? defaultValue : Long.valueOf(value);
     }
 
 
@@ -191,8 +197,7 @@ public class PrefsUtil {
 
     public static float get(String key, float defaultValue) {
         String value = getSecurePreferences().getString(key);
-        return TextUtils.isEmpty(value) ? defaultValue : Float.valueOf(value)
-                .floatValue();
+        return TextUtils.isEmpty(value) ? defaultValue : Float.valueOf(value);
     }
 
     public static void remove(String key) {

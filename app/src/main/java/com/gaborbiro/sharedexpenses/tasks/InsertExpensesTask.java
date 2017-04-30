@@ -2,26 +2,25 @@ package com.gaborbiro.sharedexpenses.tasks;
 
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.ui.screen.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.MainScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
-public class InsertExpensesTask extends BaseSheetsTask<ExpenseItem, Integer> {
+import java.io.IOException;
 
-    public InsertExpensesTask(MainScreen screen, GoogleAccountCredential credential) {
-        super(screen, credential);
+public class InsertExpensesTask extends BaseExpendesTask<ExpenseItem, Integer> {
+
+    public InsertExpensesTask(GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, MainScreen mainScreen, GoogleAccountCredential credential) {
+        super(googleApiScreen, progressScreen, mainScreen, credential);
     }
 
     @Override
-    protected Integer doInBackground(ExpenseItem... params) {
+    protected Integer work(ExpenseItem... params) throws IOException {
         int modifiedRowCount = 0;
         for (ExpenseItem expense : params) {
-            try {
-                service.insertExpense(expense);
-                modifiedRowCount++;
-            } catch (Exception e) {
-                mLastError = e;
-                cancel(true);
-            }
+            service.insertExpense(expense);
+            modifiedRowCount++;
         }
         return modifiedRowCount;
     }
@@ -29,7 +28,7 @@ public class InsertExpensesTask extends BaseSheetsTask<ExpenseItem, Integer> {
     @Override
     protected void onPostExecute(Integer response) {
         super.onPostExecute(response);
-        screen.toast(R.string.inserted, response);
-        screen.update();
+        progressScreen.toast(R.string.inserted, response);
+        mainScreen.update();
     }
 }

@@ -13,4 +13,6 @@ public interface ExpenseApi {
     void updateExpense(ExpenseItem expense) throws IOException;
 
     void deleteExpense(int index) throws IOException;
+
+    String[] getTenantNames() throws IOException;
 }

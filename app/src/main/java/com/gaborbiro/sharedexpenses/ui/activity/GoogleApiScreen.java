@@ -1,21 +1,8 @@
-package com.gaborbiro.sharedexpenses.ui.screen;
+package com.gaborbiro.sharedexpenses.ui.activity;
 
 import android.content.Intent;
-import android.support.annotation.StringRes;
 
 public interface GoogleApiScreen {
-
-    void showProgress();
-
-    void hideProgress();
-
-    void error(String text);
-
-    void toast(String message);
-
-    void toast(@StringRes int message);
-
-    void toast(@StringRes int message, Object... formatArgs);
 
     void showGooglePlayServicesAvailabilityErrorDialog(int connectionStatusCode);
 
