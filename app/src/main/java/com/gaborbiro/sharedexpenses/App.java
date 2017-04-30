@@ -5,8 +5,8 @@ import android.app.Application;
 import com.gaborbiro.sharedexpenses.di.DaggerSharedExpensesComponent;
 import com.gaborbiro.sharedexpenses.di.SharedExpensesComponent;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
-import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 
 public class App extends Application {
 

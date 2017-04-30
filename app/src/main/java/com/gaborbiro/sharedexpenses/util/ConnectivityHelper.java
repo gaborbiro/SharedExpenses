@@ -12,7 +12,9 @@ public class ConnectivityHelper {
 
     @Inject Context context;
 
-    @Inject ConnectivityHelper() {}
+    @Inject
+    ConnectivityHelper() {
+    }
 
     /**
      * Checks whether the device currently has a network connection.

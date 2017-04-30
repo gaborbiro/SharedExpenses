@@ -20,8 +20,8 @@ import com.gaborbiro.sharedexpenses.tasks.DeleteExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.InsertExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.UpdateExpensesTask;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
-import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
+import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
 import java.text.DecimalFormat;

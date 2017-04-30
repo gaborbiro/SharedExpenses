@@ -31,7 +31,7 @@ public class PrefsHelper {
     private SecurePreferences securePreferences;
 
     @Inject
-    public PrefsHelper(Context context) {
+    PrefsHelper(Context context) {
         securePreferences = new SecurePreferences(context, PREFS_NAME,
                 generateUDID(context), true);
     }
@@ -111,9 +111,7 @@ public class PrefsHelper {
             oos.writeObject(map);
             oos.flush();
             put(key, Base64.encodeToString(baos.toByteArray(), 0));
-            if (oos != null) {
-                oos.close();
-            }
+            oos.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -154,8 +152,7 @@ public class PrefsHelper {
 
     public boolean get(String key, boolean defaultValue) {
         String value = securePreferences.getString(key);
-        return TextUtils.isEmpty(value) ? defaultValue : Boolean.valueOf(value)
-                .booleanValue();
+        return TextUtils.isEmpty(value) ? defaultValue : Boolean.valueOf(value);
     }
 
 

@@ -19,7 +19,7 @@ import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.tasks.FetchExpensesTask;
 import com.gaborbiro.sharedexpenses.tasks.FetchTenantNamesTask;
-import com.gaborbiro.sharedexpenses.ui.HtmlUtil;
+import com.gaborbiro.sharedexpenses.ui.HtmlHelper;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
 
 import java.io.IOException;
@@ -35,6 +35,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
 
     @Inject Provider<FetchExpensesTask> fetchExpensesTaskProvider;
     @Inject Provider<FetchTenantNamesTask> fetchTenantNamesTaskProvider;
+    @Inject HtmlHelper htmlHelper;
 
     @BindView(R.id.webview) WebView webView;
 
@@ -159,7 +160,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
     public void setExpenses(ExpenseItem[] expenses) {
 //        webView.loadUrl("file:///android_asset/test.html");
         try {
-            String html = HtmlUtil.getHtmlTableFromExpense(this, expenses, userPrefs.getSort(Constants.DEFAULT_SORT));
+            String html = htmlHelper.getHtmlTableFromExpense(expenses);
             webView.loadDataWithBaseURL("file:///android_asset/", html, "text/html", "UTF-8", null);
         } catch (IOException e) {
             e.printStackTrace();

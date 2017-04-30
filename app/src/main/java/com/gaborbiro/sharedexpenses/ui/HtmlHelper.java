@@ -14,11 +14,22 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Objects;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 
-public class HtmlUtil {
+@Singleton
+public class HtmlHelper {
 
-    public static String getHtmlTableFromExpense(Context context, ExpenseItem[] expenses, final String sort) throws IOException {
+    @Inject Context context;
+    @Inject UserPrefs userPrefs;
+
+    @Inject
+    public HtmlHelper() {}
+
+    public String getHtmlTableFromExpense(ExpenseItem[] expenses) throws IOException {
+        final String sort = userPrefs.getSort(Constants.DEFAULT_SORT);
         ExpenseItem[] copy = new ExpenseItem[expenses.length];
         System.arraycopy(expenses, 0, copy, 0, expenses.length);
 

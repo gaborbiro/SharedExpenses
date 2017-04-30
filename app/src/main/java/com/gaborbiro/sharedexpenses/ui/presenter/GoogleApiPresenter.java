@@ -13,7 +13,9 @@ public class GoogleApiPresenter {
     private GoogleApiScreen googleApiScreen;
     private ProgressScreen progressScreen;
 
-    @Inject GoogleApiPresenter() {}
+    @Inject
+    GoogleApiPresenter() {
+    }
 
     public void setGoogleApiScreen(GoogleApiScreen googleApiScreen) {
         this.googleApiScreen = googleApiScreen;
