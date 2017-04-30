@@ -29,12 +29,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
+import butterknife.Unbinder;
 
 public class MainActivity extends GoogleApiActivity implements MainScreen {
 
-    @InjectView(R.id.webview) WebView webView;
+    private Unbinder unbinder;
+
+    @BindView(R.id.webview) WebView webView;
 
     private MainPresenter presenter;
     private Map<Integer, ExpenseItem> expenses;
@@ -56,7 +59,6 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(com.gaborbiro.sharedexpenses.R.layout.activity_main);
-        ButterKnife.inject(this);
 
         presenter = new MainPresenter(this);
 
@@ -79,6 +81,20 @@ public class MainActivity extends GoogleApiActivity implements MainScreen {
             }
         });
         update();
+    }
+
+    @Override
+    public void onContentChanged() {
+        super.onContentChanged();
+        unbinder = ButterKnife.bind(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (unbinder != null) {
+            unbinder.unbind();
+        }
+        super.onDestroy();
     }
 
     @Override
