@@ -24,7 +24,7 @@ public class DeleteExpensesTask extends BaseExpensesTask<ExpenseItem, Integer> {
     protected Integer work(ExpenseItem... params) throws IOException {
         int modifiedRowCount = 0;
         for (ExpenseItem expense : params) {
-            service.deleteExpense(expense.index);
+            expenseApi.deleteExpense(expense.index);
             modifiedRowCount++;
         }
         return modifiedRowCount;

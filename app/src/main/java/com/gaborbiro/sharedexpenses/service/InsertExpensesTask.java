@@ -24,7 +24,7 @@ public class InsertExpensesTask extends BaseExpensesTask<ExpenseItem, Integer> {
     protected Integer work(ExpenseItem... params) throws IOException {
         int modifiedRowCount = 0;
         for (ExpenseItem expense : params) {
-            service.insertExpense(expense);
+            expenseApi.insertExpense(expense);
             modifiedRowCount++;
         }
         return modifiedRowCount;

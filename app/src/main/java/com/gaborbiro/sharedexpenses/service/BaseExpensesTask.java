@@ -20,17 +20,17 @@ public abstract class BaseExpensesTask<I, O> extends AsyncTask<I, Void, O> {
     protected GoogleApiScreen googleApiScreen;
     protected ProgressScreen progressScreen;
     protected WebScreen webScreen;
-    protected ExpenseApi service;
+    protected ExpenseApi expenseApi;
 
     private IOException lastError;
 
-    public BaseExpensesTask(AppPrefs appPrefs, UserPrefs userPrefs, GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, WebScreen webScreen, ExpenseApi service) {
+    public BaseExpensesTask(AppPrefs appPrefs, UserPrefs userPrefs, GoogleApiScreen googleApiScreen, ProgressScreen progressScreen, WebScreen webScreen, ExpenseApi expenseApi) {
         this.appPrefs = appPrefs;
         this.userPrefs = userPrefs;
         this.googleApiScreen = googleApiScreen;
         this.progressScreen = progressScreen;
         this.webScreen = webScreen;
-        this.service = service;
+        this.expenseApi = expenseApi;
     }
 
     @Override

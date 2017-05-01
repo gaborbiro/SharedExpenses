@@ -24,7 +24,7 @@ public class FetchTenantNamesTask extends BaseExpensesTask<Void, String[]> {
 
     @Override
     protected String[] work(Void... params) throws IOException {
-        return service.getTenantNames();
+        return expenseApi.getTenantNames();
     }
 
     @Override

@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,7 +17,7 @@ import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.BuildConfig;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.service.FetchExpensesTask;
+import com.gaborbiro.sharedexpenses.service.ExpensesService;
 import com.gaborbiro.sharedexpenses.service.FetchTenantNamesTask;
 import com.gaborbiro.sharedexpenses.ui.HtmlHelper;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
@@ -32,7 +33,9 @@ import butterknife.BindView;
 
 public class WebActivity extends GoogleApiActivity implements WebScreen {
 
-    @Inject Provider<FetchExpensesTask> fetchExpensesTaskProvider;
+    public static final String TAG = WebActivity.class.getSimpleName();
+
+    @Inject ExpensesService service;
     @Inject Provider<FetchTenantNamesTask> fetchTenantNamesTaskProvider;
     @Inject HtmlHelper htmlHelper;
 
@@ -99,9 +102,13 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
 
     public void update() {
         if (googleApiPresenter.verifyApiAccess()) {
-            fetchExpensesTaskProvider.get().execute();
+            prepare(service.getExpenses()).subscribe(this::setExpenses, this::onUpdateError);
             fetchTenantNamesTaskProvider.get().execute();
         }
+    }
+
+    private void onUpdateError(Throwable t) {
+        Log.e(TAG, t.getMessage(), t);
     }
 
     @Override
@@ -143,8 +150,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
         webView.loadDataWithBaseURL("file:///android_asset/", text, "text/html", "UTF-8", null);
     }
 
-    @Override
-    public void setExpenses(ExpenseItem[] expenses) {
+    private void setExpenses(ExpenseItem[] expenses) {
 //        webView.loadUrl("file:///android_asset/test.html");
         try {
             String html = htmlHelper.getHtmlTableFromExpense(expenses);
