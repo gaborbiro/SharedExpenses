@@ -3,10 +3,12 @@ package com.gaborbiro.sharedexpenses.ui.activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.AppPrefs;
 import com.gaborbiro.sharedexpenses.UserPrefs;
+import com.gaborbiro.sharedexpenses.service.ExpensesService;
 
 import javax.inject.Inject;
 
@@ -19,9 +21,12 @@ import rx.subjects.PublishSubject;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
+    public static final String TAG = BaseActivity.class.getSimpleName();
+
     private Unbinder unbinder;
 
     @Inject protected App app;
+    @Inject ExpensesService service;
     @Inject protected UserPrefs userPrefs;
     @Inject protected AppPrefs appPrefs;
 
@@ -51,6 +56,11 @@ public abstract class BaseActivity extends AppCompatActivity {
         return observable
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .takeUntil(PublishSubject.create());
+                .takeUntil(PublishSubject.create())
+                .doOnError(this::log);
+    }
+
+    private void log(Throwable t) {
+        Log.e(TAG, t.getMessage(), t);
     }
 }

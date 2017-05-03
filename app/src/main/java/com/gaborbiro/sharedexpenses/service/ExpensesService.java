@@ -8,7 +8,6 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 import rx.Observable;
-import rx.functions.Func0;
 
 public class ExpensesService {
 
@@ -19,14 +18,34 @@ public class ExpensesService {
     }
 
     public Observable<ExpenseItem[]> getExpenses() {
-        return Observable.defer(new Func0<Observable<ExpenseItem[]>>() {
-            @Override
-            public Observable<ExpenseItem[]> call() {
-                try {
-                    return Observable.just(expenseApi.fetchExpenses());
-                } catch (IOException e) {
-                    return null;
-                }
+        return Observable.defer(() -> {
+            try {
+                return Observable.just(expenseApi.fetchExpenses());
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        });
+    }
+
+    public Observable<Void> delete(final ExpenseItem expense) {
+        return Observable.create(emitter -> {
+            try {
+                expenseApi.deleteExpense(expense.index);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            emitter.onCompleted();
+        });
+    }
+
+    public Observable<String[]> getTenantNames() {
+        return Observable.defer(() -> {
+            try {
+                return Observable.just(expenseApi.getTenantNames());
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
             }
         });
     }

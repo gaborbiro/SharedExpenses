@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,26 +16,20 @@ import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.BuildConfig;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.service.ExpensesService;
-import com.gaborbiro.sharedexpenses.service.FetchTenantNamesTask;
 import com.gaborbiro.sharedexpenses.ui.HtmlHelper;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import butterknife.BindView;
 
 public class WebActivity extends GoogleApiActivity implements WebScreen {
 
-    public static final String TAG = WebActivity.class.getSimpleName();
-
-    @Inject ExpensesService service;
-    @Inject Provider<FetchTenantNamesTask> fetchTenantNamesTaskProvider;
     @Inject HtmlHelper htmlHelper;
 
     @BindView(R.id.webview) WebView webView;
@@ -102,13 +95,23 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
 
     public void update() {
         if (googleApiPresenter.verifyApiAccess()) {
-            prepare(service.getExpenses()).subscribe(this::setExpenses, this::onUpdateError);
-            fetchTenantNamesTaskProvider.get().execute();
+            prepare(service.getExpenses())
+                    .doOnNext(this::fetchTenantNames)
+                    .subscribe(this::setExpenses);
         }
     }
 
-    private void onUpdateError(Throwable t) {
-        Log.e(TAG, t.getMessage(), t);
+    private void fetchTenantNames(ExpenseItem[] expenseItems) {
+        prepare(service.getTenantNames())
+                .doOnNext(tenants -> appPrefs.setTenants(tenants))
+                .subscribe(this::updateTenant);
+    }
+
+    public void updateTenant(String[] tenants) {
+        String selectedTenant = userPrefs.getSelectedTenant();
+        if (TextUtils.isEmpty(selectedTenant) || !TextUtils.isEmpty(selectedTenant) && Arrays.binarySearch(appPrefs.getTenants(), selectedTenant) < 0) {
+            chooseTenant();
+        }
     }
 
     @Override
@@ -151,7 +154,6 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
     }
 
     private void setExpenses(ExpenseItem[] expenses) {
-//        webView.loadUrl("file:///android_asset/test.html");
         try {
             String html = htmlHelper.getHtmlTableFromExpense(expenses);
             webView.loadDataWithBaseURL("file:///android_asset/", html, "text/html", "UTF-8", null);

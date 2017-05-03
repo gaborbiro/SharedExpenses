@@ -14,15 +14,11 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.R;
-import com.gaborbiro.sharedexpenses.UserPrefs;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.service.DeleteExpensesTask;
 import com.gaborbiro.sharedexpenses.service.InsertExpensesTask;
 import com.gaborbiro.sharedexpenses.service.UpdateExpensesTask;
-import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -32,6 +28,9 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+import rx.functions.Action;
+import rx.functions.Actions;
 
 public class EditExpenseDialog extends MaterialDialog {
 
@@ -49,24 +48,10 @@ public class EditExpenseDialog extends MaterialDialog {
         super(builder);
     }
 
-    //             ____        _ _     _
-    //            |  _ \      (_) |   | |
-    //            | |_) |_   _ _| | __| | ___ _ __
-    //            |  _ <| | | | | |/ _` |/ _ \ '__|
-    //            | |_) | |_| | | | (_| |  __/ |
-    //            |____/ \__,_|_|_|\__,_|\___|_|
-    //
-    public static class EditExpenseDialogBuilder extends MaterialDialog.Builder {
-
-        @Inject UserPrefs userPrefs;
-
-        private final ExpenseItem expenseItem;
+    public static class EditExpenseDialogBuilder extends BaseDialogBuilder {
 
         @Inject ProgressScreen progressScreen;
-        @Inject GoogleApiScreen googleApiScreen;
         @Inject WebScreen webScreen;
-        @Inject GoogleAccountCredential credential;
-        @Inject Provider<DeleteExpensesTask> deleteExpensesTaskProvider;
         @Inject Provider<InsertExpensesTask> insertExpensesTaskProvider;
         @Inject Provider<UpdateExpensesTask> updateExpensesTaskProvider;
 
@@ -77,9 +62,10 @@ public class EditExpenseDialog extends MaterialDialog {
         private EditText commentField;
         private DatePicker datePicker;
 
+        private final ExpenseItem expenseItem;
+
         public EditExpenseDialogBuilder(Context context, final ExpenseItem expenseItem) {
             super(context);
-            App.component.inject(this);
             this.expenseItem = expenseItem;
 
             layout = LayoutInflater.from(context).inflate(R.layout.expense_details_dialog, null);
@@ -111,6 +97,7 @@ public class EditExpenseDialog extends MaterialDialog {
                 @Override
                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                     onSubmitDialog(dialog);
+                    dialog.dismiss();
                 }
             });
             neutralText(android.R.string.cancel);
@@ -125,8 +112,13 @@ public class EditExpenseDialog extends MaterialDialog {
                 onNegative(new MaterialDialog.SingleButtonCallback() {
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        deleteExpensesTaskProvider.get().execute(expenseItem);
-                        dialog.dismiss();
+                        prepare(service.delete(expenseItem))
+                                .doOnTerminate(() -> {
+                                    dialog.dismiss();
+                                    progressScreen.toast(R.string.deleted, 1);
+                                    webScreen.update();
+                                })
+                                .subscribe(Actions.empty(), Actions.empty());
                     }
                 });
 
@@ -146,6 +138,11 @@ public class EditExpenseDialog extends MaterialDialog {
                 currencyField.setText(LOCAL_CURRENCY.getCurrency().getSymbol());
             }
             datePicker.init(now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH), null);
+        }
+
+        @Override
+        protected void inject() {
+            App.component.inject(this);
         }
 
         private void onSubmitDialog(@NonNull MaterialDialog dialog) {
@@ -188,7 +185,6 @@ public class EditExpenseDialog extends MaterialDialog {
                     progressScreen.toast(R.string.nothing_changed);
                 }
             }
-            dialog.dismiss();
         }
     }
 

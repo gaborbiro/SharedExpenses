@@ -8,6 +8,8 @@ import android.widget.Toast;
 
 import com.gaborbiro.sharedexpenses.R;
 
+import rx.Observable;
+
 public abstract class ProgressActivity extends BaseActivity implements ProgressScreen {
 
     private ProgressDialog progressDialog;
@@ -70,5 +72,12 @@ public abstract class ProgressActivity extends BaseActivity implements ProgressS
     @Override
     public void toast(@StringRes int message, Object... formatArgs) {
         toast(getString(message, formatArgs));
+    }
+
+    @Override
+    protected <O> Observable<O> prepare(Observable<O> observable) {
+        return super.prepare(observable)
+                .doOnSubscribe(this::showProgress)
+                .doAfterTerminate(this::hideProgress);
     }
 }
