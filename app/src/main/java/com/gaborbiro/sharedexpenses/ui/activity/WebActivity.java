@@ -62,12 +62,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
         updateTitle();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(com.gaborbiro.sharedexpenses.R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                EditExpenseDialog.show(WebActivity.this);
-            }
-        });
+        fab.setOnClickListener(view -> EditExpenseDialog.show(WebActivity.this));
         updateWithTenantNames();
     }
 
@@ -145,13 +140,10 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
     }
 
     public void chooseTenant() {
-        new MaterialDialog.Builder(this).items(appPrefs.getTenants()).itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
-            @Override
-            public boolean onSelection(MaterialDialog dialog, View itemView, int which, CharSequence text) {
-                userPrefs.setSelectedTenant(text.toString());
-                updateTitle();
-                return true;
-            }
+        new MaterialDialog.Builder(this).items(appPrefs.getTenants()).itemsCallbackSingleChoice(-1, (dialog, itemView, which, text) -> {
+            userPrefs.setSelectedTenant(text.toString());
+            updateTitle();
+            return true;
         }).title(R.string.who_are_you).show();
     }
 

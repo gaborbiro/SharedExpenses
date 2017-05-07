@@ -10,8 +10,7 @@ import com.gaborbiro.sharedexpenses.R;
 public class ProgressDialogFragment extends DialogFragment {
 
     public static ProgressDialogFragment newInstance() {
-        ProgressDialogFragment frag = new ProgressDialogFragment();
-        return frag;
+        return new ProgressDialogFragment();
     }
 
     @Override
@@ -28,5 +27,4 @@ public class ProgressDialogFragment extends DialogFragment {
         dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         return dialog;
     }
-
 }

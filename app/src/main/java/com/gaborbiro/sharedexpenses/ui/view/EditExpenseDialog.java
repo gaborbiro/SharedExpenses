@@ -77,43 +77,25 @@ public class EditExpenseDialog extends MaterialDialog {
                 title(context.getString(R.string.add_new_expense));
             }
 
-            descriptionField.post(new Runnable() {
-                @Override
-                public void run() {
-                    InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.showSoftInput(descriptionField, InputMethodManager.SHOW_IMPLICIT);
-                }
+            descriptionField.post(() -> {
+                InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(descriptionField, InputMethodManager.SHOW_IMPLICIT);
             });
             customView(layout, false);
 
             positiveText(R.string.submit);
-            onPositive(new MaterialDialog.SingleButtonCallback() {
-                @Override
-                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                    onSubmitDialog(dialog);
-                }
-            });
+            onPositive((dialog, which) -> onSubmitDialog(dialog));
             neutralText(android.R.string.cancel);
-            onNeutral(new MaterialDialog.SingleButtonCallback() {
-                @Override
-                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                    dialog.dismiss();
-                }
-            });
+            onNeutral((dialog, which) -> dialog.dismiss());
             if (expenseItem != null) {
                 negativeText(R.string.delete);
-                onNegative(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        prepare(service.delete(expenseItem))
-                                .doOnTerminate(() -> {
-                                    progressScreen.toast(R.string.deleted, 1);
-                                    webScreen.update();
-                                    dialog.dismiss();
-                                })
-                                .subscribe(aVoid -> Actions.empty(), throwable -> log(throwable));
-                    }
-                });
+                onNegative((dialog, which) -> prepare(service.delete(expenseItem))
+                        .doOnTerminate(() -> {
+                            progressScreen.toast(R.string.deleted, 1);
+                            webScreen.update();
+                            dialog.dismiss();
+                        })
+                        .subscribe(aVoid -> Actions.empty(), throwable -> log(throwable)));
             }
             autoDismiss(false);
 

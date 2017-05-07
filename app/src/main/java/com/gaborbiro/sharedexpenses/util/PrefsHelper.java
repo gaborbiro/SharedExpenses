@@ -93,9 +93,7 @@ public class PrefsHelper {
             ObjectInputStream ois = new ObjectInputStream(
                     new ByteArrayInputStream(bytes, 0, bytes.length));
             return (Map) ois.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return null;

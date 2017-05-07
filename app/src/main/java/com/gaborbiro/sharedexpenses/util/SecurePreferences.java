@@ -279,8 +279,6 @@ final class SecurePreferences
             output = new ObjectOutputStream(out);
             output.writeObject(preferences.getAll());
             return true;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -319,11 +317,7 @@ final class SecurePreferences
             }
             prefEdit.commit();
             return true;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
             try {

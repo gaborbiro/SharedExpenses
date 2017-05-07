@@ -37,24 +37,17 @@ public abstract class ProgressActivity extends BaseActivity implements ProgressS
     public void showProgress() {
         progressCount++;
         if (progressCount == 1) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    ProgressDialogFragment.newInstance().show(getFragmentManager(), TAG);
-                }
-            });
+            runOnUiThread(() -> ProgressDialogFragment.newInstance().show(getFragmentManager(), TAG));
         }
     }
 
     @Override
     public void hideProgress() {
         if (--progressCount == 0) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    getFragmentManager().beginTransaction().remove(getFragmentManager().findFragmentByTag(TAG)).commit();
-                }
-            });
+            runOnUiThread(() -> getFragmentManager()
+                    .beginTransaction()
+                    .remove(getFragmentManager().findFragmentByTag(TAG))
+                    .commit());
         }
     }
 
