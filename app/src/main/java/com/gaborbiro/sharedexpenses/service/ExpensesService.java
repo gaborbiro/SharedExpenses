@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
+import rx.Emitter;
 import rx.Observable;
 
 public class ExpensesService {
@@ -18,14 +19,27 @@ public class ExpensesService {
     }
 
     public Observable<ExpenseItem[]> getExpenses() {
-        return Observable.defer(() -> {
+        return Observable.create(emitter -> {
             try {
-                return Observable.just(expenseApi.fetchExpenses());
+                emitter.onNext(expenseApi.fetchExpenses());
             } catch (IOException e) {
-                e.printStackTrace();
-                return null;
+                emitter.onError(e);
+            } finally {
+                emitter.onCompleted();
             }
-        });
+        }, Emitter.BackpressureMode.NONE);
+    }
+
+    public Observable<String[]> getTenantNames() {
+        return Observable.create(emitter -> {
+            try {
+                emitter.onNext(expenseApi.getTenantNames());
+            } catch (IOException e) {
+                emitter.onError(e);
+            } finally {
+                emitter.onCompleted();
+            }
+        }, Emitter.BackpressureMode.NONE);
     }
 
     public Observable<Void> delete(final ExpenseItem expense) {
@@ -33,20 +47,34 @@ public class ExpensesService {
             try {
                 expenseApi.deleteExpense(expense.index);
             } catch (IOException e) {
-                e.printStackTrace();
+                emitter.onError(e);
+            } finally {
+                emitter.onCompleted();
             }
-            emitter.onCompleted();
-        });
+        }, Emitter.BackpressureMode.NONE);
     }
 
-    public Observable<String[]> getTenantNames() {
-        return Observable.defer(() -> {
+    public Observable<Void> insert(final ExpenseItem expense) {
+        return Observable.create(emitter -> {
             try {
-                return Observable.just(expenseApi.getTenantNames());
+                expenseApi.insertExpense(expense);
             } catch (IOException e) {
-                e.printStackTrace();
-                return null;
+                emitter.onError(e);
+            } finally {
+                emitter.onCompleted();
             }
-        });
+        }, Emitter.BackpressureMode.NONE);
+    }
+
+    public Observable<Void> update(final ExpenseItem expense) {
+        return Observable.create(emitter -> {
+            try {
+                expenseApi.updateExpense(expense);
+            } catch (IOException e) {
+                emitter.onError(e);
+            } finally {
+                emitter.onCompleted();
+            }
+        }, Emitter.BackpressureMode.NONE);
     }
 }

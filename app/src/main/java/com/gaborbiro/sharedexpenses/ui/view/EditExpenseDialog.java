@@ -15,8 +15,6 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.service.InsertExpensesTask;
-import com.gaborbiro.sharedexpenses.service.UpdateExpensesTask;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 
@@ -27,9 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
-import rx.functions.Action;
 import rx.functions.Actions;
 
 public class EditExpenseDialog extends MaterialDialog {
@@ -52,8 +48,6 @@ public class EditExpenseDialog extends MaterialDialog {
 
         @Inject ProgressScreen progressScreen;
         @Inject WebScreen webScreen;
-        @Inject Provider<InsertExpensesTask> insertExpensesTaskProvider;
-        @Inject Provider<UpdateExpensesTask> updateExpensesTaskProvider;
 
         private View layout;
         private EditText descriptionField;
@@ -97,7 +91,6 @@ public class EditExpenseDialog extends MaterialDialog {
                 @Override
                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                     onSubmitDialog(dialog);
-                    dialog.dismiss();
                 }
             });
             neutralText(android.R.string.cancel);
@@ -114,14 +107,13 @@ public class EditExpenseDialog extends MaterialDialog {
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         prepare(service.delete(expenseItem))
                                 .doOnTerminate(() -> {
-                                    dialog.dismiss();
                                     progressScreen.toast(R.string.deleted, 1);
                                     webScreen.update();
+                                    dialog.dismiss();
                                 })
-                                .subscribe(Actions.empty(), Actions.empty());
+                                .subscribe(aVoid -> Actions.empty(), throwable -> log(throwable));
                     }
                 });
-
             }
             autoDismiss(false);
 
@@ -172,7 +164,13 @@ public class EditExpenseDialog extends MaterialDialog {
 
             if (expenseItem == null) {
                 ExpenseItem entry = new ExpenseItem(buyer, description, currency + price, selectedDate.getTime(), comment);
-                insertExpensesTaskProvider.get().execute(entry);
+                prepare(service.insert(entry))
+                        .doOnTerminate(() -> {
+                            progressScreen.toast(R.string.inserted, 1);
+                            webScreen.update();
+                            dialog.dismiss();
+                        })
+                        .subscribe(aVoid -> Actions.empty(), throwable -> log(throwable));
             } else {
                 String[] currencyPrice = splitCurrency(expenseItem.price);
                 currencyPrice[0] = currency;
@@ -180,7 +178,13 @@ public class EditExpenseDialog extends MaterialDialog {
                 ExpenseItem entry = new ExpenseItem(expenseItem.index, expenseItem.buyer, description, concat(currencyPrice), selectedDate.getTime(), comment);
 
                 if (!entry.equals(expenseItem)) {
-                    updateExpensesTaskProvider.get().execute(entry);
+                    prepare(service.update(entry))
+                            .doOnTerminate(() -> {
+                                progressScreen.toast(R.string.updated, 1);
+                                webScreen.update();
+                                dialog.dismiss();
+                            })
+                            .subscribe(aVoid -> Actions.empty(), throwable -> log(throwable));
                 } else {
                     progressScreen.toast(R.string.nothing_changed);
                 }

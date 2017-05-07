@@ -13,9 +13,7 @@ import javax.inject.Inject;
 
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Actions;
 import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
 
 public abstract class BaseDialogBuilder extends MaterialDialog.Builder {
 
@@ -36,13 +34,11 @@ public abstract class BaseDialogBuilder extends MaterialDialog.Builder {
         return observable
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .takeUntil(PublishSubject.create())
                 .doOnSubscribe(progressScreen::showProgress)
-                .doAfterTerminate(progressScreen::hideProgress)
-                .doOnError(Actions.empty());
+                .doAfterTerminate(progressScreen::hideProgress);
     }
 
-    private void log(Throwable t) {
+    protected void log(Throwable t) {
         Log.e(TAG, t.getMessage(), t);
     }
 }

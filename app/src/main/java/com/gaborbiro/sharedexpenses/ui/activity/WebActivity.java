@@ -68,7 +68,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
                 EditExpenseDialog.show(WebActivity.this);
             }
         });
-        update();
+        updateWithTenantNames();
     }
 
     @Override
@@ -90,24 +90,31 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
 
     @Override
     public void onPermissionsGranted() {
-        update();
+        updateWithTenantNames();
+    }
+
+    public void updateWithTenantNames() {
+        if (googleApiPresenter.verifyApiAccess()) {
+            prepare(service.getExpenses())
+                    .doOnTerminate(this::fetchTenantNames)
+                    .subscribe(this::setExpenses);
+        }
     }
 
     public void update() {
         if (googleApiPresenter.verifyApiAccess()) {
             prepare(service.getExpenses())
-                    .doOnNext(this::fetchTenantNames)
                     .subscribe(this::setExpenses);
         }
     }
 
-    private void fetchTenantNames(ExpenseItem[] expenseItems) {
+    private void fetchTenantNames() {
         prepare(service.getTenantNames())
                 .doOnNext(tenants -> appPrefs.setTenants(tenants))
-                .subscribe(this::updateTenant);
+                .subscribe(tenants -> updateTenant());
     }
 
-    public void updateTenant(String[] tenants) {
+    public void updateTenant() {
         String selectedTenant = userPrefs.getSelectedTenant();
         if (TextUtils.isEmpty(selectedTenant) || !TextUtils.isEmpty(selectedTenant) && Arrays.binarySearch(appPrefs.getTenants(), selectedTenant) < 0) {
             chooseTenant();
