@@ -23,7 +23,7 @@ import java.text.NumberFormat;
 import java.util.Calendar;
 
 import rx.Observable;
-import rx.functions.Actions;
+import rx.functions.Action0;
 
 public class EditExpenseDialog extends BaseMaterialDialog {
 
@@ -157,7 +157,7 @@ public class EditExpenseDialog extends BaseMaterialDialog {
             ExpenseItem entry = new ExpenseItem(expenseItem.index, expenseItem.buyer, description, StringUtils.concat(currencyPrice), selectedDate.getTime(), comment);
 
             if (!entry.equals(expenseItem)) {
-                doUpdate(entry);
+                doUpdate(entry, expenseItem);
             } else {
                 progressScreen.toast(R.string.nothing_changed);
             }
@@ -167,30 +167,41 @@ public class EditExpenseDialog extends BaseMaterialDialog {
     private void doDelete(ExpenseItem expenseItem) {
         execute(
                 prepare(service.delete(expenseItem))
-                        .doOnTerminate(() -> progressScreen.toast(R.string.deleted, 1))
+                        .doOnSubscribe(this::dismiss)
+                        .doOnCompleted(() -> {
+                            progressScreen.toast(R.string.deleted, 1);
+                            webScreen.update();
+                        })
         );
     }
 
     private void doCreate(ExpenseItem expenseItem) {
         execute(
                 prepare(service.insert(expenseItem))
-                        .doOnTerminate(() -> progressScreen.toast(R.string.inserted, 1))
+                        .doOnCompleted(() -> {
+                            progressScreen.toast(R.string.inserted, 1);
+                            webScreen.update();
+                        })
         );
     }
 
-    private void doUpdate(ExpenseItem expenseItem) {
-        execute(
-                prepare(service.update(expenseItem))
-                        .doOnTerminate(() -> progressScreen.toast(R.string.updated, 1))
+    private void doUpdate(ExpenseItem expenseItem, ExpenseItem original) {
+        execute(prepare(service.update(expenseItem, original))
+                .doOnSubscribe(this::dismiss)
+                .doOnCompleted(() -> {
+                    progressScreen.toast(R.string.updated, 1);
+                    webScreen.update();
+                })
         );
     }
 
     @Override
     <O> Observable<O> prepare(Observable<O> observable) {
-        return super.prepare(observable).doOnTerminate(this::dismiss);
+        return super.prepare(observable);
     }
 
     private <T> void execute(Observable<T> o) {
-        o.subscribe(Actions.empty(), this::log);
+        o.subscribe(t -> dismiss(),
+                throwable -> progressScreen.error(throwable.getMessage()));
     }
 }

@@ -1,15 +1,19 @@
 package com.gaborbiro.sharedexpenses.ui.activity;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
+import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.gaborbiro.sharedexpenses.App;
@@ -35,6 +39,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
     @BindView(R.id.webview) WebView webView;
 
     private Map<Integer, ExpenseItem> expenses;
+    private Snackbar snackbar;
 
     public class WebAppInterface {
 
@@ -99,6 +104,9 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
 
     public void update() {
         if (googleApiPresenter.verifyApiAccess()) {
+            if (snackbar != null) {
+                snackbar.dismiss();
+            }
             prepare(service.getExpenses())
                     .subscribe(this::setExpenses);
         }
@@ -150,7 +158,19 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
 
     @Override
     public void error(String text) {
-        webView.loadDataWithBaseURL("file:///android_asset/", text, "text/html", "UTF-8", null);
+        snackbar = Snackbar.make(findViewById(R.id.coordinator_layout), text, Snackbar.LENGTH_INDEFINITE)
+                .setAction("REFRESH", v -> update());
+        snackbar.setActionTextColor(Color.RED);
+        View sbView = snackbar.getView();
+        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+        textView.setTextColor(Color.YELLOW);
+        snackbar.addCallback(new Snackbar.Callback(){
+            @Override
+            public void onDismissed(Snackbar transientBottomBar, int event) {
+                snackbar = null;
+            }
+        });
+        snackbar.show();
     }
 
     @SuppressLint("UseSparseArrays")

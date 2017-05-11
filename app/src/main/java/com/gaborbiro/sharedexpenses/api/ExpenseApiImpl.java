@@ -29,7 +29,7 @@ public class ExpenseApiImpl implements ExpenseApi {
 
     public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yy");
 
-    com.google.api.services.sheets.v4.Sheets sheetsApi = null;
+    private com.google.api.services.sheets.v4.Sheets sheetsApi = null;
 
     @Inject
     public ExpenseApiImpl(GoogleAccountCredential credential) {
@@ -45,24 +45,20 @@ public class ExpenseApiImpl implements ExpenseApi {
                 .build();
     }
 
-    public ExpenseItem[] fetchExpenses() throws IOException {
+    public ExpenseItem[] fetchExpenses() throws IOException, SpreadsheetException {
         List<ExpenseItem> results = new ArrayList<>();
         ValueRange response = this.sheetsApi.spreadsheets().values()
                 .get(Constants.SPREADSHEET_ID, Constants.EXPENSES_TABLE_RANGE)
                 .execute();
         List<List<Object>> values = response.getValues();
         if (values != null && values.size() > 1) {
-            try {
-                ExpenseRowReader reader = new ExpenseRowReader(values.get(0));
+            ExpenseRowReader reader = new ExpenseRowReader(values.get(0));
 
-                for (int i = 1; i < values.size(); i++) {
-                    List<Object> row = values.get(i);
-                    if (row.size() > 3) {
-                        results.add(reader.get(i + 1, row));
-                    }
+            for (int i = 1; i < values.size(); i++) {
+                List<Object> row = values.get(i);
+                if (row.size() > 3) {
+                    results.add(reader.get(i + 1, row));
                 }
-            } catch (SpreadsheetException e) {
-                e.printStackTrace();
             }
         }
         return results.toArray(new ExpenseItem[results.size()]);
@@ -86,7 +82,7 @@ public class ExpenseApiImpl implements ExpenseApi {
         private static int indexDate = -1;
         private static int indexComment = -1;
 
-        public ExpenseRowReader(List<Object> header) throws SpreadsheetException {
+        ExpenseRowReader(List<Object> header) throws SpreadsheetException {
             int index = 0;
             for (Object title : header) {
                 switch (title.toString()) {
@@ -168,7 +164,7 @@ public class ExpenseApiImpl implements ExpenseApi {
     }
 
     @Override
-    public void updateExpense(ExpenseItem expense) throws IOException {
+    public void updateExpense(ExpenseItem expense, ExpenseItem original) throws Exception {
         ValueRange valueRange = new ValueRange();
         List<List<Object>> row = new ArrayList<>(1);
         List<Object> cells = new ArrayList<>(5);
@@ -180,14 +176,27 @@ public class ExpenseApiImpl implements ExpenseApi {
         row.add(cells);
         valueRange.setValues(row);
         valueRange.setRange(String.format(Constants.EXPENSES_ROW_RANGE, expense.index, expense.index));
+
+        ExpenseItem[] currentContent = fetchExpenses();
+
+        if (currentContent.length <= original.index - 2 || !currentContent[original.index - 2].equals(original)) {
+            throw new Exception("Expense item has changed in the meanwhile");
+        }
+
         sheetsApi.spreadsheets().values().
                 update(Constants.SPREADSHEET_ID, String.format(Constants.EXPENSES_ROW_RANGE, expense.index, expense.index), valueRange).
                 setValueInputOption("USER_ENTERED").execute();
     }
 
     @Override
-    public void deleteExpense(int index) throws IOException {
+    public void deleteExpense(ExpenseItem expense) throws Exception {
+        ExpenseItem[] currentContent = fetchExpenses();
+
+        if (currentContent.length <= expense.index - 2 || !currentContent[expense.index - 2].equals(expense)) {
+            throw new Exception("Expense item has changed in the meanwhile");
+        }
+
         ClearValuesRequest request = new ClearValuesRequest();
-        sheetsApi.spreadsheets().values().clear(Constants.SPREADSHEET_ID, String.format(Constants.EXPENSES_ROW_RANGE, index, index), request).execute();
+        sheetsApi.spreadsheets().values().clear(Constants.SPREADSHEET_ID, String.format(Constants.EXPENSES_ROW_RANGE, expense.index, expense.index), request).execute();
     }
 }

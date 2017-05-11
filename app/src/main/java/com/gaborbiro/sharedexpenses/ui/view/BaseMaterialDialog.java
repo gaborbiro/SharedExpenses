@@ -23,7 +23,7 @@ public abstract class BaseMaterialDialog extends MaterialDialog {
     @Inject ProgressScreen progressScreen;
     @Inject WebScreen webScreen;
 
-    protected BaseMaterialDialog(Builder builder) {
+    BaseMaterialDialog(Builder builder) {
         super(builder);
         inject();
     }
@@ -35,13 +35,11 @@ public abstract class BaseMaterialDialog extends MaterialDialog {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(progressScreen::showProgress)
-                .doAfterTerminate(() -> {
-                    progressScreen.hideProgress();
-                    webScreen.update();
-                });
+                .doOnTerminate(progressScreen::hideProgress)
+                .doOnError(this::log);
     }
 
-    void log(Throwable t) {
+    private void log(Throwable t) {
         Log.e(TAG, t.getMessage(), t);
     }
 }

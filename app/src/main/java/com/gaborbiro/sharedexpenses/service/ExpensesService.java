@@ -3,8 +3,6 @@ package com.gaborbiro.sharedexpenses.service;
 import com.gaborbiro.sharedexpenses.api.ExpenseApi;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 
-import java.io.IOException;
-
 import javax.inject.Inject;
 
 import rx.Emitter;
@@ -22,10 +20,9 @@ public class ExpensesService {
         return Observable.create(emitter -> {
             try {
                 emitter.onNext(expenseApi.fetchExpenses());
-            } catch (IOException e) {
-                emitter.onError(e);
-            } finally {
                 emitter.onCompleted();
+            } catch (Exception e) {
+                emitter.onError(e);
             }
         }, Emitter.BackpressureMode.NONE);
     }
@@ -34,10 +31,9 @@ public class ExpensesService {
         return Observable.create(emitter -> {
             try {
                 emitter.onNext(expenseApi.getTenantNames());
-            } catch (IOException e) {
-                emitter.onError(e);
-            } finally {
                 emitter.onCompleted();
+            } catch (Exception e) {
+                emitter.onError(e);
             }
         }, Emitter.BackpressureMode.NONE);
     }
@@ -45,11 +41,10 @@ public class ExpensesService {
     public Observable<Void> delete(final ExpenseItem expense) {
         return Observable.create(emitter -> {
             try {
-                expenseApi.deleteExpense(expense.index);
-            } catch (IOException e) {
-                emitter.onError(e);
-            } finally {
+                expenseApi.deleteExpense(expense);
                 emitter.onCompleted();
+            } catch (Exception e) {
+                emitter.onError(e);
             }
         }, Emitter.BackpressureMode.NONE);
     }
@@ -58,22 +53,20 @@ public class ExpensesService {
         return Observable.create(emitter -> {
             try {
                 expenseApi.insertExpense(expense);
-            } catch (IOException e) {
-                emitter.onError(e);
-            } finally {
                 emitter.onCompleted();
+            } catch (Exception e) {
+                emitter.onError(e);
             }
         }, Emitter.BackpressureMode.NONE);
     }
 
-    public Observable<Void> update(final ExpenseItem expense) {
+    public Observable<Void> update(final ExpenseItem expense, final ExpenseItem original) {
         return Observable.create(emitter -> {
             try {
-                expenseApi.updateExpense(expense);
-            } catch (IOException e) {
-                emitter.onError(e);
-            } finally {
+                expenseApi.updateExpense(expense, original);
                 emitter.onCompleted();
+            } catch (Exception e) {
+                emitter.onError(e);
             }
         }, Emitter.BackpressureMode.NONE);
     }
