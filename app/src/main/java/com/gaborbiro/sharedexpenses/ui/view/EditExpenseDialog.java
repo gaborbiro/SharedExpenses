@@ -178,6 +178,7 @@ public class EditExpenseDialog extends BaseMaterialDialog {
         execute(
                 prepare(service.insert(expenseItem))
                         .doOnCompleted(() -> {
+                            dismiss();
                             progressScreen.toast(R.string.inserted, 1);
                             webScreen.update();
                         })
