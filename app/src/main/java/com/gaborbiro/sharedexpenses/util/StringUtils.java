@@ -8,6 +8,18 @@ import java.util.regex.Pattern;
 public class StringUtils {
 
     public static String[] splitCurrency(String price) {
+        price = price.trim();
+
+        if (price.startsWith("+")) {
+            price = price.substring(1);
+        }
+
+        boolean negative = false;
+        if (price.startsWith("-")) {
+            negative = true;
+            price = price.substring(1);
+        }
+
         Pattern p = Pattern.compile("[\\d]+");
         Matcher m = p.matcher(price);
 
@@ -23,9 +35,9 @@ public class StringUtils {
                 // prefix currency
                 endIndex = price.length();
             }
-            return new String[]{price.substring(0, startIndex), price.substring(startIndex, endIndex), price.substring(endIndex)};
+            return new String[]{price.substring(0, startIndex), (negative ? "-" : "") + price.substring(startIndex, endIndex), price.substring(endIndex)};
         } else {
-            return new String[]{null, price, null};
+            return new String[]{null, (negative ? "-" : "") + price, null};
         }
     }
 

@@ -23,7 +23,6 @@ import java.text.NumberFormat;
 import java.util.Calendar;
 
 import rx.Observable;
-import rx.functions.Action0;
 
 public class EditExpenseDialog extends BaseMaterialDialog {
 

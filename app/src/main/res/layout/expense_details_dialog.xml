@@ -42,7 +42,7 @@
                 android:ellipsize="end"
                 android:hint="@string/price"
                 android:id="@+id/price"
-                android:inputType="numberDecimal"
+                android:inputType="numberDecimal|numberSigned"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
                 android:layout_marginRight="8dp"
