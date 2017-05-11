@@ -24,5 +24,5 @@ public interface SharedExpensesComponent {
 
     void inject(WebActivity baseActivity);
 
-    void inject(EditExpenseDialog.EditExpenseDialogBuilder editExpenseDialogBuilder);
+    void inject(EditExpenseDialog editExpenseDialog);
 }

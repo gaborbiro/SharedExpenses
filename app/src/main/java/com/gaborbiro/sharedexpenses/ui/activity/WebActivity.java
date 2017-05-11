@@ -1,12 +1,12 @@
 package com.gaborbiro.sharedexpenses.ui.activity;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -44,6 +44,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
         }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -152,6 +153,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
         webView.loadDataWithBaseURL("file:///android_asset/", text, "text/html", "UTF-8", null);
     }
 
+    @SuppressLint("UseSparseArrays")
     private void setExpenses(ExpenseItem[] expenses) {
         try {
             String html = htmlHelper.getHtmlTableFromExpense(expenses);
