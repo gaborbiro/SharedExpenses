@@ -1,8 +1,16 @@
 package com.gaborbiro.sharedexpenses.ui.activity;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Parcelable;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
@@ -23,16 +31,21 @@ import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.ui.HtmlHelper;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
 
 import butterknife.BindView;
 
-public class WebActivity extends GoogleApiActivity implements WebScreen {
+public class WebActivity extends GoogleApiActivity implements WebScreen, EditExpenseDialog.Callback {
+
+    private static final int REQUEST_SELECT_RECEIPT = 1;
 
     @Inject HtmlHelper htmlHelper;
 
@@ -45,7 +58,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
 
         @JavascriptInterface
         public void update(final int index) {
-            EditExpenseDialog.show(WebActivity.this, expenses.get(index));
+            EditExpenseDialog.show(WebActivity.this, WebActivity.this, expenses.get(index));
         }
     }
 
@@ -68,7 +81,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
         updateTitle();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(com.gaborbiro.sharedexpenses.R.id.fab);
-        fab.setOnClickListener(view -> EditExpenseDialog.show(WebActivity.this));
+        fab.setOnClickListener(view -> EditExpenseDialog.show(WebActivity.this, WebActivity.this));
         updateWithTenantNames();
     }
 
@@ -164,7 +177,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
         View sbView = snackbar.getView();
         TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
         textView.setTextColor(Color.YELLOW);
-        snackbar.addCallback(new Snackbar.Callback(){
+        snackbar.addCallback(new Snackbar.Callback() {
             @Override
             public void onDismissed(Snackbar transientBottomBar, int event) {
                 snackbar = null;
@@ -196,5 +209,68 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
         }
         title += " " + BuildConfig.VERSION_NAME;
         getSupportActionBar().setTitle(title);
+    }
+
+    @Override
+    public void onReceiptSelectionRequested(ExpenseItem expenseItem) {
+        openImageIntent();
+    }
+
+    private Uri outputFileUri;
+
+    private void openImageIntent() {
+        final File root = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES) + File.separator);
+        outputFileUri = Uri.fromFile(new File(root, "receipt"));
+
+        final List<Intent> cameraIntents = new ArrayList<>();
+        final Intent captureIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        final PackageManager packageManager = getPackageManager();
+        final List<ResolveInfo> listCam = packageManager.queryIntentActivities(captureIntent, 0);
+
+        for (ResolveInfo res : listCam) {
+            final String packageName = res.activityInfo.packageName;
+            final Intent intent = new Intent(captureIntent);
+            intent.setComponent(new ComponentName(packageName, res.activityInfo.name));
+            intent.setPackage(packageName);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
+            cameraIntents.add(intent);
+        }
+
+        final Intent galleryIntent = new Intent();
+        galleryIntent.setType("image/*");
+        galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
+
+        final Intent chooserIntent = Intent.createChooser(galleryIntent, "Select receipt image or make a photo");
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, cameraIntents.toArray(new Parcelable[cameraIntents.size()]));
+        startActivityForResult(chooserIntent, REQUEST_SELECT_RECEIPT);
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_SELECT_RECEIPT) {
+                final boolean isCamera;
+                if (data == null) {
+                    isCamera = true;
+                } else {
+                    final String action = data.getAction();
+                    if (action == null) {
+                        isCamera = false;
+                    } else {
+                        isCamera = action.equals(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                    }
+                }
+
+                Uri selectedImageUri;
+                if (isCamera) {
+                    selectedImageUri = outputFileUri;
+                } else {
+                    selectedImageUri = data == null ? null : data.getData();
+                }
+                service.onReceiptFileSelected(selectedImageUri);
+            }
+        }
     }
 }

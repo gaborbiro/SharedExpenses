@@ -12,12 +12,13 @@ public class ExpenseItem {
     public final Date date;
     public final String dateString;
     public final String comment;
+    public final String receipt;
 
-    public ExpenseItem(String buyer, String description, String price, Date date, String comment) {
-        this(-1, buyer, description, price, date, comment);
+    public ExpenseItem(String buyer, String description, String price, Date date, String comment, String receipt) {
+        this(-1, buyer, description, price, date, comment, receipt);
     }
 
-    public ExpenseItem(int index, String buyer, String description, String price, Date date, String comment) {
+    public ExpenseItem(int index, String buyer, String description, String price, Date date, String comment, String receipt) {
         this.index = index;
         this.buyer = buyer;
         this.description = description;
@@ -25,9 +26,10 @@ public class ExpenseItem {
         this.date = date;
         this.dateString = null;
         this.comment = comment;
+        this.receipt = receipt;
     }
 
-    public ExpenseItem(int index, String buyer, String description, String price, String date, String comment) {
+    public ExpenseItem(int index, String buyer, String description, String price, String date, String comment, String receipt) {
         this.index = index;
         this.buyer = buyer;
         this.description = description;
@@ -35,6 +37,7 @@ public class ExpenseItem {
         this.date = null;
         this.dateString = date;
         this.comment = comment;
+        this.receipt = receipt;
     }
 
     @Override
@@ -56,8 +59,8 @@ public class ExpenseItem {
         if (date != null ? !date.equals(that.date) : that.date != null) return false;
         if (dateString != null ? !dateString.equals(that.dateString) : that.dateString != null)
             return false;
-        return comment != null ? comment.equals(that.comment) : that.comment == null;
-
+        if (comment != null ? !comment.equals(that.comment) : that.comment != null) return false;
+        return receipt != null ? receipt.equals(that.receipt) : that.receipt == null;
     }
 
     @Override
@@ -68,6 +71,7 @@ public class ExpenseItem {
         result = 31 * result + (date != null ? date.hashCode() : 0);
         result = 31 * result + (dateString != null ? dateString.hashCode() : 0);
         result = 31 * result + (comment != null ? comment.hashCode() : 0);
+        result = 31 * result + (receipt != null ? receipt.hashCode() : 0);
         return result;
     }
 }

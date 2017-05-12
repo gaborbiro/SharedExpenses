@@ -1,19 +1,28 @@
 package com.gaborbiro.sharedexpenses.service;
 
+import android.net.Uri;
+
 import com.gaborbiro.sharedexpenses.api.ExpenseApi;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import rx.Emitter;
 import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
+@Singleton
 public class ExpensesService {
 
     @Inject ExpenseApi expenseApi;
+    private PublishSubject<Uri> receiptFileBroadcast;
 
     @Inject
     public ExpensesService() {
+        receiptFileBroadcast = PublishSubject.create();
     }
 
     public Observable<ExpenseItem[]> getExpenses() {
@@ -69,5 +78,15 @@ public class ExpensesService {
                 emitter.onError(e);
             }
         }, Emitter.BackpressureMode.NONE);
+    }
+
+    public void onReceiptFileSelected(Uri receiptFileUri) {
+        receiptFileBroadcast.onNext(receiptFileUri);
+    }
+
+    public Observable<Uri> getReceiptFileSelectedBroadcast() {
+        return receiptFileBroadcast.asObservable()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 }

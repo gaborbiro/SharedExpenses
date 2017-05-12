@@ -26,6 +26,7 @@ public class ExpenseApiImpl implements ExpenseApi {
     private static final String COLUMN_PRICE = "Price";
     private static final String COLUMN_DATE = "Date";
     private static final String COLUMN_COMMENT = "Comment";
+    private static final String COLUMN_RECEIPT = "Receipt";
 
     public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yy");
 
@@ -81,6 +82,7 @@ public class ExpenseApiImpl implements ExpenseApi {
         private static int indexPrice = -1;
         private static int indexDate = -1;
         private static int indexComment = -1;
+        private static int indexReceipt = -1;
 
         ExpenseRowReader(List<Object> header) throws SpreadsheetException {
             int index = 0;
@@ -101,24 +103,30 @@ public class ExpenseApiImpl implements ExpenseApi {
                     case COLUMN_COMMENT:
                         indexComment = index++;
                         break;
+                    case COLUMN_RECEIPT:
+                        indexReceipt = index++;
+                        break;
                     default:
                         throw new SpreadsheetException("Unknown header column '" + title.toString() + "'");
                 }
             }
             if (indexBuyer < 0) {
-                throw new SpreadsheetException("Column 'Buyer' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
+                throw new SpreadsheetException("Column '" + COLUMN_BUYER + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
             }
             if (indexDescription < 0) {
-                throw new SpreadsheetException("Column 'Description' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
+                throw new SpreadsheetException("Column '" + COLUMN_DESCRIPTION + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
             }
             if (indexPrice < 0) {
-                throw new SpreadsheetException("Column 'Price' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
+                throw new SpreadsheetException("Column '" + COLUMN_PRICE + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
             }
             if (indexDate < 0) {
-                throw new SpreadsheetException("Column 'Date' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
+                throw new SpreadsheetException("Column '" + COLUMN_DATE + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
             }
             if (indexComment < 0) {
-                throw new SpreadsheetException("Column 'Comment' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
+                throw new SpreadsheetException("Column '" + COLUMN_COMMENT + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
+            }
+            if (indexReceipt < 0) {
+                throw new SpreadsheetException("Column '" + COLUMN_RECEIPT + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
             }
         }
 
@@ -138,10 +146,15 @@ public class ExpenseApiImpl implements ExpenseApi {
             if (row.size() > 4) {
                 comment = row.get(indexComment).toString();
             }
+
+            String receipt = null;
+            if (row.size() > 5) {
+                receipt = row.get(indexReceipt).toString();
+            }
             if (date == null) {
-                return new ExpenseItem(index, buyer, description, price, dateString, comment);
+                return new ExpenseItem(index, buyer, description, price, dateString, comment, receipt);
             } else {
-                return new ExpenseItem(index, buyer, description, price, date, comment);
+                return new ExpenseItem(index, buyer, description, price, date, comment, receipt);
             }
         }
     }

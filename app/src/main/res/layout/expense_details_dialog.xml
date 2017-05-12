@@ -3,6 +3,7 @@
             xmlns:tools="http://schemas.android.com/tools"
             android:layout_height="wrap_content"
             android:layout_width="match_parent">
+
     <LinearLayout
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
@@ -24,33 +25,46 @@
             <requestFocus/>
         </EditText>
 
-        <LinearLayout
-            android:gravity="center_vertical"
+        <RelativeLayout
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
-            android:orientation="horizontal"
-            android:paddingLeft="@dimen/fab_margin">
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp">
 
             <EditText
                 android:id="@+id/currency"
+                android:layout_centerVertical="true"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:layout_width="wrap_content"
                 tools:text="£"/>
+
+            <ImageView
+                android:id="@+id/receipt"
+                android:background="?selectableItemBackground"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:padding="8dp"
+                android:clickable="true"
+                android:layout_height="48dp"
+                android:layout_width="48dp"
+                android:src="@drawable/ic_receipt_black_24px"/>
 
             <EditText
                 android:ellipsize="end"
                 android:hint="@string/price"
                 android:id="@+id/price"
+                android:layout_toLeftOf="@id/receipt"
+                android:layout_toRightOf="@id/currency"
                 android:inputType="numberDecimal|numberSigned"
+                android:layout_centerVertical="true"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
                 android:layout_marginRight="8dp"
-                android:layout_marginTop="8dp"
                 android:layout_width="match_parent"
                 android:lines="1"
                 android:selectAllOnFocus="true"/>
-        </LinearLayout>
+
+        </RelativeLayout>
 
         <DatePicker
             android:calendarViewShown="false"
