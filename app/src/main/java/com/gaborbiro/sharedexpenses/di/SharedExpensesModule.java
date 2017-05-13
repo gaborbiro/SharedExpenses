@@ -9,12 +9,14 @@ import com.gaborbiro.sharedexpenses.api.ExpenseApiImpl;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.sheets.v4.SheetsScopes;
 
 import java.util.Arrays;
 
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -59,7 +61,12 @@ public class SharedExpensesModule {
 
     @Provides
     @Singleton
-    ExpenseApi provideExpenseApi(GoogleAccountCredential credential) {
-        return new ExpenseApiImpl(credential);
+    ExpenseApi provideExpenseApi(GoogleAccountCredential credential, Provider<GoogleApiClient> googleApiClientProvider) {
+        return new ExpenseApiImpl(credential, googleApiClientProvider);
+    }
+
+    @Provides
+    GoogleApiClient provideGoogleApiClient(App app) {
+        return app.getGoogleApiClient();
     }
 }

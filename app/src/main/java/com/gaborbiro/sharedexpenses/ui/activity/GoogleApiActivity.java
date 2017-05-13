@@ -5,13 +5,17 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.ui.presenter.GoogleApiPresenter;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.drive.Drive;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
 import java.util.List;
@@ -27,9 +31,12 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
     public static final int REQUEST_AUTHORIZATION = 1001;
     public static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     public static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
+    public static final int REQUEST_CODE_RESOLUTION = 1004;
 
     @Inject GoogleAccountCredential credential;
     @Inject GoogleApiPresenter googleApiPresenter;
+
+    private GoogleApiClient googleApiClient;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -37,23 +44,60 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
         googleApiPresenter.setGoogleApiScreen(this);
         googleApiPresenter.setProgressScreen(this);
         app.setGoogleApiScreen(this);
+
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Drive.API)
+                .addScope(Drive.SCOPE_APPFOLDER)
+                .addScope(Drive.SCOPE_FILE)
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(@Nullable Bundle bundle) {
+                        toast("GoogleApiClient connected");
+                    }
+
+                    @Override
+                    public void onConnectionSuspended(int i) {
+                        toast("GoogleApiClient connection suspended");
+                    }
+                })
+                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(@NonNull ConnectionResult result) {
+                        if (!result.hasResolution()) {
+                            // show the localized error dialog.
+                            GoogleApiAvailability.getInstance().getErrorDialog(GoogleApiActivity.this, result.getErrorCode(), 0).show();
+                            return;
+                        }
+                        // The failure has a resolution. Resolve it.
+                        // Called typically when the app is not yet authorized, and an authorization dialog is displayed to the user.
+                        try {
+                            result.startResolutionForResult(GoogleApiActivity.this, REQUEST_CODE_RESOLUTION);
+                        } catch (IntentSender.SendIntentException e) {
+                            error(e.getMessage());
+                        }
+                    }
+                })
+                .build();
+        this.googleApiClient.connect();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         app.setGoogleApiScreen(this);
+        app.setGoogleApiClient(googleApiClient);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         app.setGoogleApiScreen(null);
+        app.setGoogleApiClient(null);
     }
 
     @Override
     public void requestAuthorization(Intent intent) {
-        startActivityForResult(intent, GoogleApiActivity.REQUEST_AUTHORIZATION);
+        startActivityForResult(intent, REQUEST_AUTHORIZATION);
     }
 
     /**

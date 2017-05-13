@@ -1,5 +1,6 @@
 package com.gaborbiro.sharedexpenses.service;
 
+import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.net.Uri;
 
@@ -89,18 +90,16 @@ public class ExpensesService {
         }, Emitter.BackpressureMode.NONE);
     }
 
-    public Observable<Uri> uploadReceipt(Bitmap bmp) {
-        return Observable.create(new Action1<Emitter<Uri>>() {
-            @Override
-            public void call(Emitter<Uri> uriEmitter) {
-                String uriFromUpload = "bla";
-                try {
-                    uriEmitter.onNext(Uri.parse(uriFromUpload));
-                } catch (Throwable t) {
-                    uriEmitter.onError(new Exception("bad uri"));
-                }
-            }
-        }, Emitter.BackpressureMode.NONE);
+    public Observable<IntentSender> uploadReceipt(Bitmap bmp) {
+        return Observable.create(
+                uriEmitter -> Observable.create(
+                        (Action1<Emitter<IntentSender>>) stringEmitter -> expenseApi.uploadFile(bmp, stringEmitter),
+                        Emitter.BackpressureMode.NONE
+                )
+                .subscribe(
+                        intentSender -> uriEmitter.onNext(intentSender),
+                        throwable -> uriEmitter.onError(new Exception("bad uri"))),
+                Emitter.BackpressureMode.NONE);
     }
 
     public Observable<Void> update(final ExpenseItem expense, final ExpenseItem original) {

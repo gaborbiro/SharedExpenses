@@ -1,8 +1,15 @@
 package com.gaborbiro.sharedexpenses.api;
 
+import android.content.IntentSender;
+import android.graphics.Bitmap;
+
 import com.gaborbiro.sharedexpenses.Constants;
 import com.gaborbiro.sharedexpenses.SpreadsheetException;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveApi;
+import com.google.android.gms.drive.MetadataChangeSet;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpTransport;
@@ -11,14 +18,18 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sheets.v4.model.ClearValuesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
+import javax.inject.Provider;
+
+import rx.Emitter;
 
 public class ExpenseApiImpl implements ExpenseApi {
     private static final String COLUMN_BUYER = "Buyer";
@@ -31,10 +42,11 @@ public class ExpenseApiImpl implements ExpenseApi {
     public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yy");
 
     private com.google.api.services.sheets.v4.Sheets sheetsApi = null;
+    private Provider<GoogleApiClient> googleApiClientProvider;
 
-    @Inject
-    public ExpenseApiImpl(GoogleAccountCredential credential) {
+    public ExpenseApiImpl(GoogleAccountCredential credential, Provider<GoogleApiClient> googleApiClientProvider) {
         this.sheetsApi = getSheetsApi(credential);
+        this.googleApiClientProvider = googleApiClientProvider;
     }
 
     private com.google.api.services.sheets.v4.Sheets getSheetsApi(GoogleAccountCredential credential) {
@@ -74,6 +86,35 @@ public class ExpenseApiImpl implements ExpenseApi {
             result[i] = values.get(i).get(0).toString();
         }
         return result;
+    }
+
+    @Override
+    public void uploadFile(Bitmap bmp, Emitter<IntentSender> callback) {
+        DriveApi.DriveContentsResult result = Drive.DriveApi.newDriveContents(googleApiClientProvider.get()).await();
+        // If the operation was not successful, we cannot do anything and must fail.
+        if (!result.getStatus().isSuccess()) {
+            callback.onError(new Exception("Failed to create new contents."));
+            return;
+        }
+        // Otherwise, we can write our data to the new contents.
+        // Get an output stream for the contents.
+        OutputStream outputStream = result.getDriveContents().getOutputStream();
+        // Write the bitmap data from it.
+        ByteArrayOutputStream bitmapStream = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, bitmapStream);
+        try {
+            outputStream.write(bitmapStream.toByteArray());
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+        MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder()
+                .setMimeType("image/jpeg").setTitle("Android Photo.png").build();
+        // Create an intent for the file chooser, and start it.
+        callback.onNext(Drive.DriveApi
+                .newCreateFileActivityBuilder()
+                .setInitialMetadata(metadataChangeSet)
+                .setInitialDriveContents(result.getDriveContents())
+                .build(googleApiClientProvider.get()));
     }
 
     public static class ExpenseRowReader {
@@ -157,6 +198,7 @@ public class ExpenseApiImpl implements ExpenseApi {
                 return new ExpenseItem(index, buyer, description, price, date, comment, receipt);
             }
         }
+
     }
 
     public void insertExpense(ExpenseItem expense) throws IOException {

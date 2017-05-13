@@ -2,6 +2,7 @@ package com.gaborbiro.sharedexpenses.ui.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -76,13 +77,18 @@ public class EditExpenseDialog extends BaseServiceDialog {
         service.getReceiptEventBroadcast().subscribe(event -> {
             switch (event.type) {
                 case SELECTED:
-                    try {
-                        receiptBtn.setImageBitmap(ImageUtils.getImageFromUri(getContext(), event.receiptUri));
-                        receiptBtn.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        localReceiptFile = event.receiptUri;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    receiptBtn.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                receiptBtn.setImageBitmap(ImageUtils.getImageFromUri(getContext(), event.receiptUri));
+                                receiptBtn.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                                localReceiptFile = event.receiptUri;
+                            } catch (IOException e) {
+                                showError("Error reading file");
+                            }
+                        }
+                    });
                     break;
                 case DELETED:
                     localReceiptFile = null;
@@ -139,12 +145,15 @@ public class EditExpenseDialog extends BaseServiceDialog {
                 bitmap -> prepare(
                         service.uploadReceipt(bitmap))
                         .subscribe(
-                                uri -> {
-                                    uploadedReceiptFile = uri.toString();
-                                    onSubmit();
+                                intentSender -> {
+//                                    uploadedReceiptFile = intentSender.toString();
+//                                    doSubmit();
+                                    dismiss();
+                                    webScreen.intent(intentSender);
                                 },
                                 throwable -> showError("Error uploading receipt. See logs for more details.")),
                 throwable -> showError("Error reading receipt. See logs for more details."));
+
     }
 
     private Observable<Bitmap> doFetchBitmap(Uri localReceiptFile) {

@@ -56,6 +56,7 @@ dependencies {
     compile('com.google.apis:google-api-services-sheets:v4-rev38-1.22.0') {
         exclude group: 'org.apache.httpcomponents'
     }
+    compile "com.google.android.gms:play-services-drive:${versions.getProperty('PLAY_SERVICES')}"
     compile "io.reactivex:rxjava:${versions.getProperty('RXJAVA')}"
     compile "io.reactivex:rxandroid:${versions.getProperty('RXANDROID')}"
     compile "com.google.dagger:dagger:${versions.getProperty('DAGGER')}"

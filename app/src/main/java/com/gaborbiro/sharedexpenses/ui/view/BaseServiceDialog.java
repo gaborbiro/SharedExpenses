@@ -40,24 +40,11 @@ public abstract class BaseServiceDialog extends MaterialDialog {
         return observable
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe(new Action0() {
-                    @Override
-                    public void call() {
-                        progressScreen.showProgress();
-                    }
-                })
-                .doAfterTerminate(new Action0() {
-                    @Override
-                    public void call() {
-                         progressScreen.hideProgress();
-                    }
-                })
-                .doOnError(new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        progressScreen.hideProgress();
-                        log(throwable);
-                    }
+                .doOnSubscribe(() -> progressScreen.showProgress())
+                .doAfterTerminate(() -> progressScreen.hideProgress())
+                .doOnError(throwable -> {
+                    progressScreen.hideProgress();
+                    log(throwable);
                 });
     }
 

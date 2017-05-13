@@ -7,12 +7,14 @@ import com.gaborbiro.sharedexpenses.di.SharedExpensesComponent;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
+import com.google.android.gms.common.api.GoogleApiClient;
 
 public class App extends Application {
 
     private GoogleApiScreen googleApiScreen;
     private ProgressScreen progressScreen;
     private WebScreen webScreen;
+    private GoogleApiClient googleApiClient;
 
     public static SharedExpensesComponent component;
 
@@ -44,5 +46,13 @@ public class App extends Application {
 
     public void setWebScreen(WebScreen webScreen) {
         this.webScreen = webScreen;
+    }
+
+    public GoogleApiClient getGoogleApiClient() {
+        return googleApiClient;
+    }
+
+    public void setGoogleApiClient(GoogleApiClient googleApiClient) {
+        this.googleApiClient = googleApiClient;
     }
 }

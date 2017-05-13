@@ -3,6 +3,7 @@ package com.gaborbiro.sharedexpenses.ui.activity;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
@@ -131,6 +132,15 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
             }
             prepare(service.getExpenses())
                     .subscribe(this::setExpenses);
+        }
+    }
+
+    @Override
+    public void intent(IntentSender intentSender) {
+        try {
+            startIntentSender(intentSender, null, 0, 0, 0);
+        } catch (IntentSender.SendIntentException e) {
+            e.printStackTrace();
         }
     }
 
