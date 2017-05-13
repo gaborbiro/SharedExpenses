@@ -19,6 +19,9 @@
     <string name="deleted">Deleted %1$d rows</string>
     <string name="nothing_changed">Nothing changed</string>
     <string name="who_are_you">Who are you?</string>
-    <string name="delete">Delete</string>
+    <string name="remove">Remove</string>
     <string name="refresh">Refresh</string>
+    <string name="change">Change</string>
+
+    <string name="receipt_dialog_title">Receipt</string>
 </resources>

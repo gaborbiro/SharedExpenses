@@ -28,6 +28,7 @@ import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.BuildConfig;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
+import com.gaborbiro.sharedexpenses.service.ReceiptEvent;
 import com.gaborbiro.sharedexpenses.ui.HtmlHelper;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
 
@@ -43,7 +44,7 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 
-public class WebActivity extends GoogleApiActivity implements WebScreen, EditExpenseDialog.Callback {
+public class WebActivity extends GoogleApiActivity implements WebScreen {
 
     private static final int REQUEST_SELECT_RECEIPT = 1;
 
@@ -54,11 +55,13 @@ public class WebActivity extends GoogleApiActivity implements WebScreen, EditExp
     private Map<Integer, ExpenseItem> expenses;
     private Snackbar snackbar;
 
+    private Uri outputFileUri;
+
     public class WebAppInterface {
 
         @JavascriptInterface
         public void update(final int index) {
-            EditExpenseDialog.show(WebActivity.this, WebActivity.this, expenses.get(index));
+            EditExpenseDialog.show(WebActivity.this, expenses.get(index));
         }
     }
 
@@ -81,8 +84,14 @@ public class WebActivity extends GoogleApiActivity implements WebScreen, EditExp
         updateTitle();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(com.gaborbiro.sharedexpenses.R.id.fab);
-        fab.setOnClickListener(view -> EditExpenseDialog.show(WebActivity.this, WebActivity.this));
+        fab.setOnClickListener(view -> EditExpenseDialog.show(WebActivity.this));
         updateWithTenantNames();
+
+        service.getReceiptEventBroadcast().subscribe(receiptEvent -> {
+            if (receiptEvent.type == ReceiptEvent.Type.SELECT) {
+                openImageIntent();
+            }
+        });
     }
 
     @Override
@@ -211,13 +220,6 @@ public class WebActivity extends GoogleApiActivity implements WebScreen, EditExp
         getSupportActionBar().setTitle(title);
     }
 
-    @Override
-    public void onReceiptSelectionRequested(ExpenseItem expenseItem) {
-        openImageIntent();
-    }
-
-    private Uri outputFileUri;
-
     private void openImageIntent() {
         final File root = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES) + File.separator);
         outputFileUri = Uri.fromFile(new File(root, "receipt"));
@@ -256,20 +258,16 @@ public class WebActivity extends GoogleApiActivity implements WebScreen, EditExp
                     isCamera = true;
                 } else {
                     final String action = data.getAction();
-                    if (action == null) {
-                        isCamera = false;
-                    } else {
-                        isCamera = action.equals(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                    }
+                    isCamera = action != null && action.equals(MediaStore.ACTION_IMAGE_CAPTURE);
                 }
 
                 Uri selectedImageUri;
                 if (isCamera) {
                     selectedImageUri = outputFileUri;
                 } else {
-                    selectedImageUri = data == null ? null : data.getData();
+                    selectedImageUri = data.getData();
                 }
-                service.onReceiptFileSelected(selectedImageUri);
+                service.sendReceiptSelectedEvent(selectedImageUri);
             }
         }
     }

@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.gaborbiro.sharedexpenses.ui.activity.WebActivity;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
+import com.gaborbiro.sharedexpenses.ui.view.ReceiptDialog;
 
 import javax.inject.Singleton;
 
@@ -23,6 +24,6 @@ public interface SharedExpensesComponent {
     }
 
     void inject(WebActivity baseActivity);
-
     void inject(EditExpenseDialog editExpenseDialog);
+    void inject(ReceiptDialog receiptDialog);
 }

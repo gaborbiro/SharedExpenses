@@ -1,5 +1,6 @@
 package com.gaborbiro.sharedexpenses.service;
 
+import android.graphics.Bitmap;
 import android.net.Uri;
 
 import com.gaborbiro.sharedexpenses.api.ExpenseApi;
@@ -11,6 +12,7 @@ import javax.inject.Singleton;
 import rx.Emitter;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
@@ -18,11 +20,29 @@ import rx.subjects.PublishSubject;
 public class ExpensesService {
 
     @Inject ExpenseApi expenseApi;
-    private PublishSubject<Uri> receiptFileBroadcast;
+    private PublishSubject<ReceiptEvent> receiptEventBroadcast;
 
     @Inject
     public ExpensesService() {
-        receiptFileBroadcast = PublishSubject.create();
+        receiptEventBroadcast = PublishSubject.create();
+    }
+
+    public void sendReceiptSelectEvent() {
+        receiptEventBroadcast.onNext(ReceiptEvent.builder().type(ReceiptEvent.Type.SELECT).build());
+    }
+
+    public void sendReceiptDeletedEvent() {
+        receiptEventBroadcast.onNext(ReceiptEvent.builder().type(ReceiptEvent.Type.DELETED).build());
+    }
+
+    public void sendReceiptSelectedEvent(Uri receiptFileUri) {
+        receiptEventBroadcast.onNext(ReceiptEvent.builder().type(ReceiptEvent.Type.SELECTED).receiptUri(receiptFileUri).build());
+    }
+
+    public Observable<ReceiptEvent> getReceiptEventBroadcast() {
+        return receiptEventBroadcast.asObservable()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
     public Observable<ExpenseItem[]> getExpenses() {
@@ -69,6 +89,20 @@ public class ExpensesService {
         }, Emitter.BackpressureMode.NONE);
     }
 
+    public Observable<Uri> uploadReceipt(Bitmap bmp) {
+        return Observable.create(new Action1<Emitter<Uri>>() {
+            @Override
+            public void call(Emitter<Uri> uriEmitter) {
+                String uriFromUpload = "bla";
+                try {
+                    uriEmitter.onNext(Uri.parse(uriFromUpload));
+                } catch (Throwable t) {
+                    uriEmitter.onError(new Exception("bad uri"));
+                }
+            }
+        }, Emitter.BackpressureMode.NONE);
+    }
+
     public Observable<Void> update(final ExpenseItem expense, final ExpenseItem original) {
         return Observable.create(emitter -> {
             try {
@@ -78,15 +112,5 @@ public class ExpensesService {
                 emitter.onError(e);
             }
         }, Emitter.BackpressureMode.NONE);
-    }
-
-    public void onReceiptFileSelected(Uri receiptFileUri) {
-        receiptFileBroadcast.onNext(receiptFileUri);
-    }
-
-    public Observable<Uri> getReceiptFileSelectedBroadcast() {
-        return receiptFileBroadcast.asObservable()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
     }
 }

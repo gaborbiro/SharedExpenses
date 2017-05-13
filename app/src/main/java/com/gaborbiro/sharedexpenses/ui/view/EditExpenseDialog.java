@@ -2,7 +2,8 @@ package com.gaborbiro.sharedexpenses.ui.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.provider.MediaStore;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -18,6 +19,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
+import com.gaborbiro.sharedexpenses.util.ImageUtils;
 import com.gaborbiro.sharedexpenses.util.StringUtils;
 
 import java.io.IOException;
@@ -25,24 +27,17 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Calendar;
 
+import rx.Emitter;
 import rx.Observable;
+import rx.functions.Action1;
 
-public class EditExpenseDialog extends BaseMaterialDialog {
-
-    public interface Callback {
-        /**
-         * @param expenseItem the {@link ExpenseItem} that is currently visible in the dialog
-         */
-        void onReceiptSelectionRequested(ExpenseItem expenseItem);
-    }
-
-    private static Callback DUMMY_CALLBACK = expenseItem -> {
-        // dummy
-    };
+public class EditExpenseDialog extends BaseServiceDialog {
 
     private static final NumberFormat LOCAL_CURRENCY = DecimalFormat.getCurrencyInstance();
 
     private ExpenseItem expenseItem;
+    private Uri localReceiptFile;
+    private String uploadedReceiptFile;
 
     private EditText descriptionField;
     private ImageView receiptBtn;
@@ -51,16 +46,12 @@ public class EditExpenseDialog extends BaseMaterialDialog {
     private EditText commentField;
     private DatePicker datePicker;
 
-    private Callback callback = DUMMY_CALLBACK;
-
-
-    public static void show(@NonNull Context context, @Nullable Callback callback) {
-        show(context, callback, null);
+    public static void show(@NonNull Context context) {
+        show(context, null);
     }
 
-    public static void show(@NonNull Context context, @Nullable Callback callback, @Nullable ExpenseItem expenseItem) {
-        EditExpenseDialog dialog = new EditExpenseDialogBuilder(context, true).build();
-        dialog.callback = callback != null ? callback : DUMMY_CALLBACK;
+    public static void show(@NonNull Context context, @Nullable ExpenseItem expenseItem) {
+        EditExpenseDialog dialog = new EditExpenseDialogBuilder(context, expenseItem != null).build();
         dialog.init(expenseItem);
         dialog.show();
     }
@@ -81,12 +72,28 @@ public class EditExpenseDialog extends BaseMaterialDialog {
             imm.showSoftInput(descriptionField, InputMethodManager.SHOW_IMPLICIT);
         });
 
-        receiptBtn.setOnClickListener(v -> callback.onReceiptSelectionRequested(expenseItem));
-        service.getReceiptFileSelectedBroadcast().subscribe(uri -> {
-            try {
-                receiptBtn.setImageBitmap(MediaStore.Images.Media.getBitmap(getContext().getContentResolver(), uri));
-            } catch (IOException e) {
-                e.printStackTrace();
+        receiptBtn.setOnClickListener(v -> onReceiptClicked());
+        service.getReceiptEventBroadcast().subscribe(event -> {
+            switch (event.type) {
+                case SELECTED:
+                    try {
+                        receiptBtn.setImageBitmap(ImageUtils.getImageFromUri(getContext(), event.receiptUri));
+                        receiptBtn.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        localReceiptFile = event.receiptUri;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case DELETED:
+                    localReceiptFile = null;
+                    uploadedReceiptFile = null;
+                    receiptBtn.setImageResource(R.drawable.ic_receipt_black_24px);
+                    receiptBtn.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    break;
+                case UPDATE:
+                    break;
+                default:
+                    break;
             }
         });
     }
@@ -96,6 +103,7 @@ public class EditExpenseDialog extends BaseMaterialDialog {
         Calendar now = Calendar.getInstance();
 
         if (expenseItem != null) {
+            uploadedReceiptFile = TextUtils.isEmpty(expenseItem.receipt) ? null : expenseItem.receipt;
             now.setTime(expenseItem.date);
             descriptionField.setText(expenseItem.description);
             commentField.setText(expenseItem.comment);
@@ -103,6 +111,7 @@ public class EditExpenseDialog extends BaseMaterialDialog {
             currencyField.setText(currencyPrice[0] != null ? currencyPrice[0] : currencyPrice[2]);
             priceField.setText(currencyPrice[1]);
         } else {
+            uploadedReceiptFile = null;
             currencyField.setText(LOCAL_CURRENCY.getCurrency().getSymbol());
         }
         datePicker.init(now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH), null);
@@ -114,6 +123,43 @@ public class EditExpenseDialog extends BaseMaterialDialog {
     }
 
     private void onSubmit() {
+        if (receiptUploadNeeded()) {
+            doUploadReceipt();
+        } else {
+            doSubmit();
+        }
+    }
+
+    private boolean receiptUploadNeeded() {
+        return localReceiptFile != null;
+    }
+
+    private void doUploadReceipt() {
+        doFetchBitmap(localReceiptFile).subscribe(
+                bitmap -> prepare(
+                        service.uploadReceipt(bitmap))
+                        .subscribe(
+                                uri -> {
+                                    uploadedReceiptFile = uri.toString();
+                                    onSubmit();
+                                },
+                                throwable -> showError("Error uploading receipt. See logs for more details.")),
+                throwable -> showError("Error reading receipt. See logs for more details."));
+    }
+
+    private Observable<Bitmap> doFetchBitmap(Uri localReceiptFile) {
+        return prepare(
+                Observable.create((Action1<Emitter<Bitmap>>) emitter -> {
+                    try {
+                        emitter.onNext(ImageUtils.getImageFromUri(getContext(), localReceiptFile));
+                    } catch (Throwable t) {
+                        emitter.onError(t);
+                    }
+                }, Emitter.BackpressureMode.NONE))
+                .doOnNext(bitmap -> progressScreen.hideProgress());
+    }
+
+    private void doSubmit() {
         String description = descriptionField.getText().toString();
         String currency = currencyField.getText().toString();
         String price = priceField.getText().toString();
@@ -142,14 +188,17 @@ public class EditExpenseDialog extends BaseMaterialDialog {
         selectedDate.set(Calendar.MONTH, month);
         selectedDate.set(Calendar.DATE, dayOfMonth);
 
+        String receipt = uploadedReceiptFile != null ? uploadedReceiptFile.toString() : null;
+
         if (expenseItem == null) {
-            ExpenseItem entry = new ExpenseItem(buyer, description, currency + price, selectedDate.getTime(), comment, null);
+            ExpenseItem entry = new ExpenseItem(buyer, description, currency + price, selectedDate.getTime(), comment, receipt);
             doCreate(entry);
         } else {
             String[] currencyPrice = StringUtils.splitCurrency(expenseItem.price);
             currencyPrice[0] = currency;
             currencyPrice[1] = price;
-            ExpenseItem entry = new ExpenseItem(expenseItem.index, expenseItem.buyer, description, StringUtils.concat(currencyPrice), selectedDate.getTime(), comment, expenseItem.receipt);
+            ExpenseItem entry = new ExpenseItem(expenseItem.index, expenseItem.buyer, description,
+                    StringUtils.concat(currencyPrice), selectedDate.getTime(), comment, receipt);
 
             if (!entry.equals(expenseItem)) {
                 doUpdate(entry, expenseItem);
@@ -191,27 +240,28 @@ public class EditExpenseDialog extends BaseMaterialDialog {
         );
     }
 
-    @Override
-    <O> Observable<O> prepare(Observable<O> observable) {
-        return super.prepare(observable);
-    }
-
     private <T> void execute(Observable<T> o) {
         o.subscribe(t -> dismiss(),
                 throwable -> progressScreen.error(throwable.getMessage()));
     }
 
-    private static class EditExpenseDialogBuilder extends MaterialDialog.Builder {
+    private void onReceiptClicked() {
+        if (localReceiptFile == null) {
+            service.sendReceiptSelectEvent();
+        } else {
+            ReceiptDialog.show(getContext(), localReceiptFile);
+        }
+    }
 
-        private View layout;
+    private static class EditExpenseDialogBuilder extends MaterialDialog.Builder {
 
         @SuppressLint("InflateParams")
         EditExpenseDialogBuilder(Context context, boolean deleteEnabled) {
             super(context);
 
-            layout = LayoutInflater.from(context).inflate(R.layout.expense_details_dialog, null);
-
+            View layout = LayoutInflater.from(context).inflate(R.layout.expense_details_dialog, null);
             customView(layout, false);
+
             title(context.getString(R.string.expense_details));
             positiveText(R.string.submit);
             onPositive((dialog, which) -> ((EditExpenseDialog) dialog).onSubmit());
@@ -219,7 +269,7 @@ public class EditExpenseDialog extends BaseMaterialDialog {
             onNeutral((dialog, which) -> dialog.dismiss());
 
             if (deleteEnabled) {
-                negativeText(R.string.delete);
+                negativeText(R.string.remove);
                 onNegative((dialog, which) -> ((EditExpenseDialog) dialog).doDelete());
             }
             autoDismiss(false);
