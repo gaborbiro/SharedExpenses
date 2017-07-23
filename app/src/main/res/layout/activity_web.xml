@@ -6,7 +6,7 @@
                                                  android:id="@+id/coordinator_layout"
                                                  android:layout_height="match_parent"
                                                  android:layout_width="match_parent"
-                                                 tools:context="com.gaborbiro.sharedexpenses.ui.activity.WebActivity">
+                                                 tools:context="com.gaborbiro.sharedexpenses.ui.activity.MainActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_height="wrap_content"
@@ -19,7 +19,6 @@
             android:layout_height="?attr/actionBarSize"
             android:layout_width="match_parent"
             app:popupTheme="@style/AppTheme.PopupOverlay"/>
-
     </android.support.design.widget.AppBarLayout>
 
     <include layout="@layout/content_main"/>
@@ -30,6 +29,21 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/fab_margin"
         android:layout_width="wrap_content"
-        app:srcCompat="@drawable/ic_add_circle_white_24px"/>
+        app:srcCompat="@drawable/ic_add_circle"/>
+
+    <ImageView
+        android:background="@drawable/background_rounded_corner"
+        android:clickable="true"
+        android:focusable="true"
+        android:id="@+id/stats_handle_button"
+        android:layout_gravity="bottom|center"
+        android:layout_height="@dimen/bottom_button_height"
+        android:layout_marginBottom="-1dp"
+        android:layout_width="128dp"
+        android:src="@drawable/ic_arrow_up"
+        android:visibility="gone"
+        tools:visibility="visible">
+    </ImageView>
+
 
 </android.support.design.widget.CoordinatorLayout>

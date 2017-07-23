@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.AppPrefs;
@@ -16,12 +17,12 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.plugins.RxJavaErrorHandler;
+import rx.plugins.RxJavaPlugins;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
 public abstract class BaseActivity extends AppCompatActivity {
-
-    public static final String TAG = BaseActivity.class.getSimpleName();
 
     private Unbinder unbinder;
 
@@ -61,6 +62,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     private void log(Throwable t) {
-        Log.e(TAG, t.getMessage(), t);
+        Toast.makeText(this, t.getMessage(), Toast.LENGTH_LONG).show();
+        Log.e(getClass().getSimpleName(), t.getMessage(), t);
     }
 }

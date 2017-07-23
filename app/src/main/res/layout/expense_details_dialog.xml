@@ -47,7 +47,7 @@
                 android:clickable="true"
                 android:layout_height="48dp"
                 android:layout_width="96dp"
-                android:src="@drawable/ic_receipt_black_24px"/>
+                android:src="@drawable/ic_receipt"/>
 
             <EditText
                 android:ellipsize="end"

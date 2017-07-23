@@ -2,7 +2,6 @@ package com.gaborbiro.sharedexpenses.ui.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -93,7 +92,7 @@ public class EditExpenseDialog extends BaseServiceDialog {
                 case DELETED:
                     localReceiptFile = null;
                     uploadedReceiptFile = null;
-                    receiptBtn.setImageResource(R.drawable.ic_receipt_black_24px);
+                    receiptBtn.setImageResource(R.drawable.ic_receipt);
                     receiptBtn.setScaleType(ImageView.ScaleType.FIT_CENTER);
                     break;
                 case UPDATE:

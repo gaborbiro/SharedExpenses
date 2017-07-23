@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 
 import com.gaborbiro.sharedexpenses.Constants;
 import com.gaborbiro.sharedexpenses.SpreadsheetException;
+import com.gaborbiro.sharedexpenses.model.StatItem;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.drive.Drive;
@@ -21,10 +22,8 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.inject.Provider;
@@ -32,15 +31,6 @@ import javax.inject.Provider;
 import rx.Emitter;
 
 public class ExpenseApiImpl implements ExpenseApi {
-    private static final String COLUMN_BUYER = "Buyer";
-    private static final String COLUMN_DESCRIPTION = "Description";
-    private static final String COLUMN_PRICE = "Price";
-    private static final String COLUMN_DATE = "Date";
-    private static final String COLUMN_COMMENT = "Comment";
-    private static final String COLUMN_RECEIPT = "Receipt";
-
-    public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yy");
-
     private com.google.api.services.sheets.v4.Sheets sheetsApi = null;
     private Provider<GoogleApiClient> googleApiClientProvider;
 
@@ -65,12 +55,16 @@ public class ExpenseApiImpl implements ExpenseApi {
                 .execute();
         List<List<Object>> values = response.getValues();
         if (values != null && values.size() > 1) {
-            ExpenseRowReader reader = new ExpenseRowReader(values.get(0));
+            SheetRowReader<ExpenseItem> reader = ExpenseItem.getReader(values.get(0));
 
             for (int i = 1; i < values.size(); i++) {
                 List<Object> row = values.get(i);
-                if (row.size() > 3) {
-                    results.add(reader.get(i + 1, row));
+                if (row.size() > 0) {
+                    try {
+                        results.add(reader.get(i + 1, row));
+                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -117,88 +111,28 @@ public class ExpenseApiImpl implements ExpenseApi {
                 .build(googleApiClientProvider.get()));
     }
 
-    public static class ExpenseRowReader {
-        private static int indexBuyer = -1;
-        private static int indexDescription = -1;
-        private static int indexPrice = -1;
-        private static int indexDate = -1;
-        private static int indexComment = -1;
-        private static int indexReceipt = -1;
+    @Override
+    public StatItem[] fetchStats() throws IOException, SpreadsheetException {
+        List<StatItem> results = new ArrayList<>();
+        ValueRange response = this.sheetsApi.spreadsheets().values()
+                .get(Constants.SPREADSHEET_ID, Constants.STATS_TABLE_RANGE)
+                .execute();
+        List<List<Object>> values = response.getValues();
+        if (values != null && values.size() > 1) {
+            SheetRowReader<StatItem> reader = StatItem.getReader(values.get(0));
 
-        ExpenseRowReader(List<Object> header) throws SpreadsheetException {
-            int index = 0;
-            for (Object title : header) {
-                switch (title.toString()) {
-                    case COLUMN_BUYER:
-                        indexBuyer = index++;
-                        break;
-                    case COLUMN_DESCRIPTION:
-                        indexDescription = index++;
-                        break;
-                    case COLUMN_PRICE:
-                        indexPrice = index++;
-                        break;
-                    case COLUMN_DATE:
-                        indexDate = index++;
-                        break;
-                    case COLUMN_COMMENT:
-                        indexComment = index++;
-                        break;
-                    case COLUMN_RECEIPT:
-                        indexReceipt = index++;
-                        break;
-                    default:
-                        throw new SpreadsheetException("Unknown header column '" + title.toString() + "'");
+            for (int i = 1; i < values.size(); i++) {
+                List<Object> row = values.get(i);
+                if (row.size() > 0) {
+                    try {
+                        results.add(reader.get(i + 1, row));
+                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-            if (indexBuyer < 0) {
-                throw new SpreadsheetException("Column '" + COLUMN_BUYER + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
-            }
-            if (indexDescription < 0) {
-                throw new SpreadsheetException("Column '" + COLUMN_DESCRIPTION + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
-            }
-            if (indexPrice < 0) {
-                throw new SpreadsheetException("Column '" + COLUMN_PRICE + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
-            }
-            if (indexDate < 0) {
-                throw new SpreadsheetException("Column '" + COLUMN_DATE + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
-            }
-            if (indexComment < 0) {
-                throw new SpreadsheetException("Column '" + COLUMN_COMMENT + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
-            }
-            if (indexReceipt < 0) {
-                throw new SpreadsheetException("Column '" + COLUMN_RECEIPT + "' is missing. It should be in the first row of the spreadsheet (page 2016-2017).");
-            }
         }
-
-        public ExpenseItem get(int index, List<Object> row) {
-            String buyer = row.get(indexBuyer).toString();
-            String description = row.get(indexDescription).toString();
-            String price = row.get(indexPrice).toString();
-            Date date = null;
-            String dateString = null;
-            try {
-                date = DATE_FORMAT.parse(row.get(indexDate).toString());
-            } catch (ParseException e) {
-                dateString = row.get(indexDate).toString();
-            }
-            String comment = null;
-
-            if (row.size() > 4) {
-                comment = row.get(indexComment).toString();
-            }
-
-            String receipt = null;
-            if (row.size() > 5) {
-                receipt = row.get(indexReceipt).toString();
-            }
-            if (date == null) {
-                return new ExpenseItem(index, buyer, description, price, dateString, comment, receipt);
-            } else {
-                return new ExpenseItem(index, buyer, description, price, date, comment, receipt);
-            }
-        }
-
+        return results.toArray(new StatItem[results.size()]);
     }
 
     public void insertExpense(ExpenseItem expense) throws IOException {
@@ -208,7 +142,7 @@ public class ExpenseApiImpl implements ExpenseApi {
         cells.add(expense.buyer);
         cells.add(expense.description);
         cells.add(expense.price);
-        cells.add(DATE_FORMAT.format(expense.date));
+        cells.add(expense.dateString);
         cells.add(expense.comment);
         row.add(cells);
         valueRange.setValues(row);
@@ -226,7 +160,7 @@ public class ExpenseApiImpl implements ExpenseApi {
         cells.add(expense.buyer);
         cells.add(expense.description);
         cells.add(expense.price);
-        cells.add(DATE_FORMAT.format(expense.date));
+        cells.add(expense.dateString);
         cells.add(expense.comment);
         row.add(cells);
         valueRange.setValues(row);

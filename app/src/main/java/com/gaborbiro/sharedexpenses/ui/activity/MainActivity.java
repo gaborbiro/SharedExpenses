@@ -29,8 +29,10 @@ import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.BuildConfig;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
+import com.gaborbiro.sharedexpenses.model.StatItem;
 import com.gaborbiro.sharedexpenses.service.ReceiptEvent;
 import com.gaborbiro.sharedexpenses.ui.HtmlHelper;
+import com.gaborbiro.sharedexpenses.ui.fragment.StatsFragment;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
 
 import java.io.File;
@@ -45,15 +47,17 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 
-public class WebActivity extends GoogleApiActivity implements WebScreen {
+public class MainActivity extends GoogleApiActivity implements WebScreen {
 
     private static final int REQUEST_SELECT_RECEIPT = 1;
 
     @Inject HtmlHelper htmlHelper;
 
     @BindView(R.id.webview) WebView webView;
+    @BindView(R.id.stats_handle_button) View statsButton;
 
     private Map<Integer, ExpenseItem> expenses;
+    private StatItem[] stats;
     private Snackbar snackbar;
 
     private Uri outputFileUri;
@@ -62,7 +66,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
 
         @JavascriptInterface
         public void update(final int index) {
-            EditExpenseDialog.show(WebActivity.this, expenses.get(index));
+            EditExpenseDialog.show(MainActivity.this, expenses.get(index));
         }
     }
 
@@ -71,7 +75,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         app.setWebScreen(this);
-        setContentView(com.gaborbiro.sharedexpenses.R.layout.activity_web);
+        setContentView(R.layout.activity_web);
 
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setWebChromeClient(new WebChromeClient());
@@ -79,13 +83,13 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
         webView.setScrollbarFadingEnabled(true);
         webView.addJavascriptInterface(new WebAppInterface(), "android");
 
-        Toolbar toolbar = (Toolbar) findViewById(com.gaborbiro.sharedexpenses.R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         updateTitle();
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(com.gaborbiro.sharedexpenses.R.id.fab);
-        fab.setOnClickListener(view -> EditExpenseDialog.show(WebActivity.this));
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(view -> EditExpenseDialog.show(MainActivity.this));
         updateWithTenantNames();
 
         service.getReceiptEventBroadcast().subscribe(receiptEvent -> {
@@ -93,6 +97,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
                 openImageIntent();
             }
         });
+        statsButton.setOnClickListener(v -> StatsFragment.show(MainActivity.this, stats));
     }
 
     @Override
@@ -120,8 +125,11 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
     public void updateWithTenantNames() {
         if (googleApiPresenter.verifyApiAccess()) {
             prepare(service.getExpenses())
-                    .doOnTerminate(this::fetchTenantNames)
-                    .subscribe(this::setExpenses);
+                    .subscribe(expenseItems -> {
+                        setContent(expenseItems);
+                        fetchTenantNames();
+                        fetchStats();
+                    });
         }
     }
 
@@ -131,7 +139,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
                 snackbar.dismiss();
             }
             prepare(service.getExpenses())
-                    .subscribe(this::setExpenses);
+                    .subscribe(this::setContent);
         }
     }
 
@@ -148,6 +156,13 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
         prepare(service.getTenantNames())
                 .doOnNext(tenants -> appPrefs.setTenants(tenants))
                 .subscribe(tenants -> updateTenant());
+    }
+
+    private void fetchStats() {
+        prepare(service.getStats()).subscribe(stats -> {
+            MainActivity.this.stats = stats;
+            statsButton.setVisibility(stats == null || stats.length == 0 ? View.GONE : View.VISIBLE);
+        });
     }
 
     public void updateTenant() {
@@ -206,7 +221,7 @@ public class WebActivity extends GoogleApiActivity implements WebScreen {
     }
 
     @SuppressLint("UseSparseArrays")
-    private void setExpenses(ExpenseItem[] expenses) {
+    private void setContent(ExpenseItem[] expenses) {
         try {
             String html = htmlHelper.getHtmlTableFromExpense(expenses);
             webView.loadDataWithBaseURL("file:///android_asset/", html, "text/html", "UTF-8", null);

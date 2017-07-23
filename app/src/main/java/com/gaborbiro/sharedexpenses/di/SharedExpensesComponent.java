@@ -2,7 +2,8 @@ package com.gaborbiro.sharedexpenses.di;
 
 import android.app.Application;
 
-import com.gaborbiro.sharedexpenses.ui.activity.WebActivity;
+import com.gaborbiro.sharedexpenses.ui.activity.MainActivity;
+import com.gaborbiro.sharedexpenses.ui.fragment.StatsFragment;
 import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
 import com.gaborbiro.sharedexpenses.ui.view.ReceiptDialog;
 
@@ -23,7 +24,8 @@ public interface SharedExpensesComponent {
         SharedExpensesComponent build();
     }
 
-    void inject(WebActivity baseActivity);
+    void inject(MainActivity baseActivity);
     void inject(EditExpenseDialog editExpenseDialog);
     void inject(ReceiptDialog receiptDialog);
+    void inject(StatsFragment statsFragment);
 }

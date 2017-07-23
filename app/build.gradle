@@ -2,6 +2,7 @@ Properties versions = new Properties()
 versions.load(new FileInputStream("app/version.properties"))
 
 apply plugin: 'com.android.application'
+apply plugin: 'me.tatarka.retrolambda'
 
 android {
     compileSdkVersion 25
@@ -9,7 +10,7 @@ android {
     defaultConfig {
         applicationId "com.gaborbiro.sharedexpenses"
         minSdkVersion 21
-        targetSdkVersion 25
+        targetSdkVersion 22
         versionCode 1001
         versionName "1.1"
         vectorDrawables.generatedDensities = ['xxhdpi']
@@ -36,6 +37,16 @@ android {
                         output.outputFile.name.replace(".apk", apkPostfix))
             }
         }
+    }
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
+    lintOptions {
+        abortOnError false
+        disable 'InvalidPackage'
+    }
+    dataBinding {
+        enabled = true
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

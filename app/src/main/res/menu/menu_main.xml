@@ -1,17 +1,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.gaborbiro.sharedexpenses.ui.activity.WebActivity">
+    tools:context="com.gaborbiro.sharedexpenses.ui.activity.MainActivity">
     <item
         android:id="@+id/action_refresh"
         android:orderInCategory="99"
         android:title="@string/refresh"
-        android:icon="@drawable/ic_refresh_white_24px"
+        android:icon="@drawable/ic_refresh"
         app:showAsAction="always" />
     <item
         android:id="@+id/action_sort_by"
         android:orderInCategory="100"
         android:title="@string/sort_by"
-        android:icon="@drawable/ic_sort_white_24px"
+        android:icon="@drawable/ic_sort"
         app:showAsAction="always" />
 </menu>

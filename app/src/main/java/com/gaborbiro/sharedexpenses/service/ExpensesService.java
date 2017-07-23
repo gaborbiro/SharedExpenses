@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 
 import com.gaborbiro.sharedexpenses.api.ExpenseApi;
+import com.gaborbiro.sharedexpenses.model.StatItem;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 
 import javax.inject.Inject;
@@ -50,9 +51,10 @@ public class ExpensesService {
         return Observable.create(emitter -> {
             try {
                 emitter.onNext(expenseApi.fetchExpenses());
-                emitter.onCompleted();
             } catch (Exception e) {
                 emitter.onError(e);
+            } finally {
+                emitter.onCompleted();
             }
         }, Emitter.BackpressureMode.NONE);
     }
@@ -61,9 +63,10 @@ public class ExpensesService {
         return Observable.create(emitter -> {
             try {
                 emitter.onNext(expenseApi.getTenantNames());
-                emitter.onCompleted();
             } catch (Exception e) {
                 emitter.onError(e);
+            } finally {
+                emitter.onCompleted();
             }
         }, Emitter.BackpressureMode.NONE);
     }
@@ -109,6 +112,18 @@ public class ExpensesService {
                 emitter.onCompleted();
             } catch (Exception e) {
                 emitter.onError(e);
+            }
+        }, Emitter.BackpressureMode.NONE);
+    }
+
+    public Observable<StatItem[]> getStats() {
+        return Observable.create(emitter -> {
+            try {
+                emitter.onNext(expenseApi.fetchStats());
+            } catch (Exception e) {
+                emitter.onError(e);
+            } finally {
+                emitter.onCompleted();
             }
         }, Emitter.BackpressureMode.NONE);
     }

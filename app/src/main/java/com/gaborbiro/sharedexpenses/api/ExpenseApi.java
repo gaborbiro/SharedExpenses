@@ -4,6 +4,7 @@ import android.content.IntentSender;
 import android.graphics.Bitmap;
 
 import com.gaborbiro.sharedexpenses.SpreadsheetException;
+import com.gaborbiro.sharedexpenses.model.StatItem;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 
 import java.io.IOException;
@@ -23,4 +24,6 @@ public interface ExpenseApi {
     String[] getTenantNames() throws IOException;
 
     void uploadFile(Bitmap bmp, Emitter<IntentSender> callback);
+
+    StatItem[] fetchStats() throws IOException, SpreadsheetException;
 }

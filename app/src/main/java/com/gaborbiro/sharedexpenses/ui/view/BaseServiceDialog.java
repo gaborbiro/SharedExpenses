@@ -16,13 +16,9 @@ import javax.inject.Inject;
 
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action0;
-import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 public abstract class BaseServiceDialog extends MaterialDialog {
-
-    private static final String TAG = "BaseServiceDialog";
 
     @Inject UserPrefs userPrefs;
     @Inject ExpensesService service;
@@ -49,7 +45,7 @@ public abstract class BaseServiceDialog extends MaterialDialog {
     }
 
     private void log(Throwable t) {
-        Log.e(TAG, t.getMessage(), t);
+        Log.e(getClass().getSimpleName(), t.getMessage(), t);
     }
 
     void showError(String message) {

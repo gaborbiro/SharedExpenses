@@ -10,13 +10,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.ui.presenter.GoogleApiPresenter;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.drive.Drive;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 
 import java.util.List;
 
@@ -24,6 +24,7 @@ import javax.inject.Inject;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
+import rx.Observable;
 
 public abstract class GoogleApiActivity extends ProgressActivity implements GoogleApiScreen, EasyPermissions.PermissionCallbacks {
 
@@ -60,21 +61,18 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
                         toast("GoogleApiClient connection suspended");
                     }
                 })
-                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
-                    @Override
-                    public void onConnectionFailed(@NonNull ConnectionResult result) {
-                        if (!result.hasResolution()) {
-                            // show the localized error dialog.
-                            GoogleApiAvailability.getInstance().getErrorDialog(GoogleApiActivity.this, result.getErrorCode(), 0).show();
-                            return;
-                        }
-                        // The failure has a resolution. Resolve it.
-                        // Called typically when the app is not yet authorized, and an authorization dialog is displayed to the user.
-                        try {
-                            result.startResolutionForResult(GoogleApiActivity.this, REQUEST_CODE_RESOLUTION);
-                        } catch (IntentSender.SendIntentException e) {
-                            error(e.getMessage());
-                        }
+                .addOnConnectionFailedListener(result -> {
+                    if (!result.hasResolution()) {
+                        // show the localized error dialog.
+                        GoogleApiAvailability.getInstance().getErrorDialog(GoogleApiActivity.this, result.getErrorCode(), 0).show();
+                        return;
+                    }
+                    // The failure has a resolution. Resolve it.
+                    // Called typically when the app is not yet authorized, and an authorization dialog is displayed to the user.
+                    try {
+                        result.startResolutionForResult(GoogleApiActivity.this, REQUEST_CODE_RESOLUTION);
+                    } catch (IntentSender.SendIntentException e) {
+                        error(e.getMessage());
                     }
                 })
                 .build();
@@ -218,6 +216,15 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
                 }
                 break;
         }
+    }
+
+    @Override
+    protected <O> Observable<O> prepare(Observable<O> observable) {
+        return super.prepare(observable).doOnError(throwable -> {
+            if (throwable instanceof UserRecoverableAuthIOException) {
+                requestAuthorization(((UserRecoverableAuthIOException) throwable).getIntent());
+            }
+        });
     }
 
     // EasyPermissions.PermissionCallbacks implementation
