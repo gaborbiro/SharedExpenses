@@ -39,7 +39,6 @@ public abstract class BaseServiceDialog extends MaterialDialog {
                 .doOnSubscribe(() -> progressScreen.showProgress())
                 .doAfterTerminate(() -> progressScreen.hideProgress())
                 .doOnError(throwable -> {
-                    progressScreen.hideProgress();
                     log(throwable);
                 });
     }

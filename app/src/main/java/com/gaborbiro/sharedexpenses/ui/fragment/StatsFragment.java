@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
-import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.StatItem;
 import com.gaborbiro.sharedexpenses.util.BottomSheetCallbackAdapter;
@@ -78,11 +77,6 @@ public class StatsFragment extends BaseDialogFragment {
             ((TextView) statRow.findViewById(R.id.debt)).setText(statItem.debt);
             table.addView(statRow);
         }
-    }
-
-    @Override
-    protected void inject() {
-        App.component.inject(this);
     }
 
     @Override

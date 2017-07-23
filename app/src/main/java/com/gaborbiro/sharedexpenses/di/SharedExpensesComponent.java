@@ -27,5 +27,4 @@ public interface SharedExpensesComponent {
     void inject(MainActivity baseActivity);
     void inject(EditExpenseDialog editExpenseDialog);
     void inject(ReceiptDialog receiptDialog);
-    void inject(StatsFragment statsFragment);
 }

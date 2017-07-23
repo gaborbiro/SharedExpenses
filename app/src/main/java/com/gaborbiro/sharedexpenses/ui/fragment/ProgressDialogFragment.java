@@ -1,16 +1,22 @@
 package com.gaborbiro.sharedexpenses.ui.fragment;
 
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AppCompatActivity;
 
 import com.gaborbiro.sharedexpenses.R;
 
 public class ProgressDialogFragment extends DialogFragment {
 
-    public static ProgressDialogFragment newInstance() {
-        return new ProgressDialogFragment();
+    public static void show(AppCompatActivity activity, String tag) {
+        new ProgressDialogFragment().show(activity.getSupportFragmentManager(), tag);
+    }
+
+    public static void hide(AppCompatActivity activity, String tag) {
+        activity.getSupportFragmentManager().beginTransaction().
+                remove(activity.getSupportFragmentManager().findFragmentByTag(tag)).commitAllowingStateLoss();
     }
 
     @Override

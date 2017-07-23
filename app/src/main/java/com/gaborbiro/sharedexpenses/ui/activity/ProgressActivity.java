@@ -11,7 +11,7 @@ import rx.Observable;
 
 public abstract class ProgressActivity extends BaseActivity implements ProgressScreen {
 
-    private static final String TAG = "progress";
+    private static final String TAG = "ProgressDialogFragment";
 
     private int progressCount;
 
@@ -37,17 +37,14 @@ public abstract class ProgressActivity extends BaseActivity implements ProgressS
     public void showProgress() {
         progressCount++;
         if (progressCount == 1) {
-//            runOnUiThread(() -> ProgressDialogFragment.newInstance().show(getFragmentManager(), TAG));
+            runOnUiThread(() -> ProgressDialogFragment.show(this, TAG));
         }
     }
 
     @Override
     public void hideProgress() {
         if (--progressCount == 0) {
-//            runOnUiThread(() -> getFragmentManager()
-//                    .beginTransaction()
-//                    .remove(getFragmentManager().findFragmentByTag(TAG))
-//                    .commit());
+            runOnUiThread(() -> ProgressDialogFragment.hide(this, TAG));
         }
     }
 
