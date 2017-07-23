@@ -56,6 +56,36 @@ public class ExpenseItem extends BaseItem {
         this.receipt = receipt;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ExpenseItem that = (ExpenseItem) o;
+
+        if (buyer != null ? !buyer.equals(that.buyer) : that.buyer != null) return false;
+        if (description != null ? !description.equals(that.description) : that.description != null)
+            return false;
+        if (price != null ? !price.equals(that.price) : that.price != null) return false;
+        if (date != null ? !date.equals(that.date) : that.date != null) return false;
+        if (dateString != null ? !dateString.equals(that.dateString) : that.dateString != null)
+            return false;
+        if (comment != null ? !comment.equals(that.comment) : that.comment != null) return false;
+        return receipt != null ? receipt.equals(that.receipt) : that.receipt == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = buyer != null ? buyer.hashCode() : 0;
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (price != null ? price.hashCode() : 0);
+        result = 31 * result + (date != null ? date.hashCode() : 0);
+        result = 31 * result + (dateString != null ? dateString.hashCode() : 0);
+        result = 31 * result + (comment != null ? comment.hashCode() : 0);
+        result = 31 * result + (receipt != null ? receipt.hashCode() : 0);
+        return result;
+    }
+
     public static SheetRowReader<ExpenseItem> getReader(List<Object> header) throws SpreadsheetException {
         return new SheetRowReader<>(header, new String[]{
                 COLUMN_BUYER,

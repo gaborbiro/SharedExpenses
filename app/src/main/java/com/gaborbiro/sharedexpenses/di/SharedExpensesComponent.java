@@ -4,8 +4,8 @@ import android.app.Application;
 
 import com.gaborbiro.sharedexpenses.ui.activity.MainActivity;
 import com.gaborbiro.sharedexpenses.ui.fragment.StatsFragment;
-import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
-import com.gaborbiro.sharedexpenses.ui.view.ReceiptDialog;
+import com.gaborbiro.sharedexpenses.ui.dialog.EditExpenseDialog;
+import com.gaborbiro.sharedexpenses.ui.dialog.ReceiptDialog;
 
 import javax.inject.Singleton;
 

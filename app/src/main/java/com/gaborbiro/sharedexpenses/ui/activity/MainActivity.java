@@ -33,7 +33,7 @@ import com.gaborbiro.sharedexpenses.model.StatItem;
 import com.gaborbiro.sharedexpenses.service.ReceiptEvent;
 import com.gaborbiro.sharedexpenses.ui.HtmlHelper;
 import com.gaborbiro.sharedexpenses.ui.fragment.StatsFragment;
-import com.gaborbiro.sharedexpenses.ui.view.EditExpenseDialog;
+import com.gaborbiro.sharedexpenses.ui.dialog.EditExpenseDialog;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,7 +90,7 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(view -> EditExpenseDialog.show(MainActivity.this));
-        updateWithTenantNames();
+        update();
 
         service.getReceiptEventBroadcast().subscribe(receiptEvent -> {
             if (receiptEvent.type == ReceiptEvent.Type.SELECT) {
@@ -119,18 +119,7 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
 
     @Override
     public void onPermissionsGranted() {
-        updateWithTenantNames();
-    }
-
-    public void updateWithTenantNames() {
-        if (googleApiPresenter.verifyApiAccess()) {
-            prepare(service.getExpenses())
-                    .subscribe(expenseItems -> {
-                        setContent(expenseItems);
-                        fetchTenantNames();
-                        fetchStats();
-                    });
-        }
+        update();
     }
 
     public void update() {
@@ -139,7 +128,11 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
                 snackbar.dismiss();
             }
             prepare(service.getExpenses())
-                    .subscribe(this::setContent);
+                    .subscribe(expenseItems -> {
+                        setContent(expenseItems);
+                        fetchTenantNames();
+                        fetchStats();
+                    });
         }
     }
 

@@ -5,7 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.widget.Toast;
 
-import com.gaborbiro.sharedexpenses.ui.view.ProgressDialogFragment;
+import com.gaborbiro.sharedexpenses.ui.fragment.ProgressDialogFragment;
 
 import rx.Observable;
 
@@ -37,17 +37,17 @@ public abstract class ProgressActivity extends BaseActivity implements ProgressS
     public void showProgress() {
         progressCount++;
         if (progressCount == 1) {
-            runOnUiThread(() -> ProgressDialogFragment.newInstance().show(getFragmentManager(), TAG));
+//            runOnUiThread(() -> ProgressDialogFragment.newInstance().show(getFragmentManager(), TAG));
         }
     }
 
     @Override
     public void hideProgress() {
         if (--progressCount == 0) {
-            runOnUiThread(() -> getFragmentManager()
-                    .beginTransaction()
-                    .remove(getFragmentManager().findFragmentByTag(TAG))
-                    .commit());
+//            runOnUiThread(() -> getFragmentManager()
+//                    .beginTransaction()
+//                    .remove(getFragmentManager().findFragmentByTag(TAG))
+//                    .commit());
         }
     }
 

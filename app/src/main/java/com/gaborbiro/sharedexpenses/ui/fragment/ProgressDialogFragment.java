@@ -1,4 +1,4 @@
-package com.gaborbiro.sharedexpenses.ui.view;
+package com.gaborbiro.sharedexpenses.ui.fragment;
 
 import android.app.Dialog;
 import android.app.DialogFragment;

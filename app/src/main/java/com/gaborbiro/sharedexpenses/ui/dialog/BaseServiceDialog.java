@@ -1,4 +1,4 @@
-package com.gaborbiro.sharedexpenses.ui.view;
+package com.gaborbiro.sharedexpenses.ui.dialog;
 
 import android.graphics.Color;
 import android.support.design.widget.Snackbar;

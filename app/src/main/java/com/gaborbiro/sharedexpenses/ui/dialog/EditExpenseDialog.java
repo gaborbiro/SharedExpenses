@@ -1,4 +1,4 @@
-package com.gaborbiro.sharedexpenses.ui.view;
+package com.gaborbiro.sharedexpenses.ui.dialog;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -76,16 +76,13 @@ public class EditExpenseDialog extends BaseServiceDialog {
         service.getReceiptEventBroadcast().subscribe(event -> {
             switch (event.type) {
                 case SELECTED:
-                    receiptBtn.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                receiptBtn.setImageBitmap(ImageUtils.getImageFromUri(getContext(), event.receiptUri));
-                                receiptBtn.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                                localReceiptFile = event.receiptUri;
-                            } catch (IOException e) {
-                                showError("Error reading file");
-                            }
+                    receiptBtn.post(() -> {
+                        try {
+                            receiptBtn.setImageBitmap(ImageUtils.getImageFromUri(getContext(), event.receiptUri));
+                            receiptBtn.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            localReceiptFile = event.receiptUri;
+                        } catch (IOException e) {
+                            showError("Error reading file");
                         }
                     });
                     break;
@@ -196,17 +193,15 @@ public class EditExpenseDialog extends BaseServiceDialog {
         selectedDate.set(Calendar.MONTH, month);
         selectedDate.set(Calendar.DATE, dayOfMonth);
 
-        String receipt = uploadedReceiptFile != null ? uploadedReceiptFile.toString() : null;
-
         if (expenseItem == null) {
-            ExpenseItem entry = new ExpenseItem(buyer, description, currency + price, selectedDate.getTime(), comment, receipt);
+            ExpenseItem entry = new ExpenseItem(buyer, description, currency + price, selectedDate.getTime(), comment, uploadedReceiptFile);
             doCreate(entry);
         } else {
             String[] currencyPrice = StringUtils.splitCurrency(expenseItem.price);
             currencyPrice[0] = currency;
             currencyPrice[1] = price;
             ExpenseItem entry = new ExpenseItem(expenseItem.index, expenseItem.buyer, description,
-                    StringUtils.concat(currencyPrice), selectedDate.getTime(), comment, receipt);
+                    StringUtils.concat(currencyPrice), selectedDate.getTime(), comment, uploadedReceiptFile);
 
             if (!entry.equals(expenseItem)) {
                 doUpdate(entry, expenseItem);

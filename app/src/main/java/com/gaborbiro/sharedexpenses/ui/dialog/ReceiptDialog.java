@@ -1,4 +1,4 @@
-package com.gaborbiro.sharedexpenses.ui.view;
+package com.gaborbiro.sharedexpenses.ui.dialog;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
