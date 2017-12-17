@@ -9,8 +9,6 @@ import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
 import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import rx.plugins.RxJavaHooks;
-
 public class App extends Application {
 
     private GoogleApiScreen googleApiScreen;
@@ -24,8 +22,6 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         component = DaggerSharedExpensesComponent.builder().application(this).build();
-
-        RxJavaHooks.enableAssemblyTracking();
     }
 
     public GoogleApiScreen getGoogleApiScreen() {

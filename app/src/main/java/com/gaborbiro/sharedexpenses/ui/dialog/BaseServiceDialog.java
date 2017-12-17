@@ -14,9 +14,10 @@ import com.gaborbiro.sharedexpenses.ui.activity.WebScreen;
 
 import javax.inject.Inject;
 
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import io.reactivex.Completable;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 public abstract class BaseServiceDialog extends MaterialDialog {
 
@@ -36,11 +37,18 @@ public abstract class BaseServiceDialog extends MaterialDialog {
         return observable
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe(() -> progressScreen.showProgress())
-                .doAfterTerminate(() -> progressScreen.hideProgress())
-                .doOnError(throwable -> {
-                    log(throwable);
-                });
+                .doOnSubscribe(result -> progressScreen.showProgress())
+                .doAfterTerminate(progressScreen::hideProgress)
+                .doOnError(this::log);
+    }
+
+    Completable prepare(Completable completable) {
+        return completable
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(result -> progressScreen.showProgress())
+                .doAfterTerminate(progressScreen::hideProgress)
+                .doOnError(this::log);
     }
 
     private void log(Throwable t) {

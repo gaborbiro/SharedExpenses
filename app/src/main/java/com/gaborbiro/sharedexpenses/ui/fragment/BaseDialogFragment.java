@@ -8,10 +8,6 @@ import android.support.design.widget.BottomSheetDialog;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.view.View;
 
-import com.gaborbiro.sharedexpenses.ui.activity.ProgressScreen;
-
-import javax.inject.Inject;
-
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 

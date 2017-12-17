@@ -2,8 +2,6 @@ package com.gaborbiro.sharedexpenses.ui.dialog;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -12,35 +10,29 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
-import com.gaborbiro.sharedexpenses.util.ImageUtils;
 import com.gaborbiro.sharedexpenses.util.StringUtils;
 
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Calendar;
 
-import rx.Emitter;
-import rx.Observable;
-import rx.functions.Action1;
+import io.reactivex.Completable;
+import io.reactivex.Observable;
 
 public class EditExpenseDialog extends BaseServiceDialog {
 
     private static final NumberFormat LOCAL_CURRENCY = DecimalFormat.getCurrencyInstance();
 
     private ExpenseItem expenseItem;
-    private Uri localReceiptFile;
     private String uploadedReceiptFile;
 
     private EditText descriptionField;
-    private ImageView receiptBtn;
     private EditText priceField;
     private TextView currencyField;
     private EditText commentField;
@@ -61,7 +53,6 @@ public class EditExpenseDialog extends BaseServiceDialog {
 
         View layout = getCustomView();
         descriptionField = (EditText) layout.findViewById(R.id.description);
-        receiptBtn = (ImageView) layout.findViewById(R.id.receipt);
         priceField = (EditText) layout.findViewById(R.id.price);
         currencyField = (TextView) layout.findViewById(R.id.currency);
         commentField = (EditText) layout.findViewById(R.id.comment);
@@ -70,33 +61,6 @@ public class EditExpenseDialog extends BaseServiceDialog {
         descriptionField.post(() -> {
             InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.showSoftInput(descriptionField, InputMethodManager.SHOW_IMPLICIT);
-        });
-
-        receiptBtn.setOnClickListener(v -> onReceiptClicked());
-        service.getReceiptEventBroadcast().subscribe(event -> {
-            switch (event.type) {
-                case SELECTED:
-                    receiptBtn.post(() -> {
-                        try {
-                            receiptBtn.setImageBitmap(ImageUtils.getImageFromUri(getContext(), event.receiptUri));
-                            receiptBtn.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            localReceiptFile = event.receiptUri;
-                        } catch (IOException e) {
-                            showError("Error reading file");
-                        }
-                    });
-                    break;
-                case DELETED:
-                    localReceiptFile = null;
-                    uploadedReceiptFile = null;
-                    receiptBtn.setImageResource(R.drawable.ic_receipt);
-                    receiptBtn.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                    break;
-                case UPDATE:
-                    break;
-                default:
-                    break;
-            }
         });
     }
 
@@ -125,43 +89,7 @@ public class EditExpenseDialog extends BaseServiceDialog {
     }
 
     private void onSubmit() {
-        if (receiptUploadNeeded()) {
-            doUploadReceipt();
-        } else {
-            doSubmit();
-        }
-    }
-
-    private boolean receiptUploadNeeded() {
-        return localReceiptFile != null;
-    }
-
-    private void doUploadReceipt() {
-        doFetchBitmap(localReceiptFile).subscribe(
-                bitmap -> prepare(
-                        service.uploadReceipt(bitmap))
-                        .subscribe(
-                                intentSender -> {
-//                                    uploadedReceiptFile = intentSender.toString();
-//                                    doSubmit();
-                                    dismiss();
-                                    webScreen.intent(intentSender);
-                                },
-                                throwable -> showError("Error uploading receipt. See logs for more details.")),
-                throwable -> showError("Error reading receipt. See logs for more details."));
-
-    }
-
-    private Observable<Bitmap> doFetchBitmap(Uri localReceiptFile) {
-        return prepare(
-                Observable.create((Action1<Emitter<Bitmap>>) emitter -> {
-                    try {
-                        emitter.onNext(ImageUtils.getImageFromUri(getContext(), localReceiptFile));
-                    } catch (Throwable t) {
-                        emitter.onError(t);
-                    }
-                }, Emitter.BackpressureMode.NONE))
-                .doOnNext(bitmap -> progressScreen.hideProgress());
+        doSubmit();
     }
 
     private void doSubmit() {
@@ -214,8 +142,8 @@ public class EditExpenseDialog extends BaseServiceDialog {
     private void doDelete() {
         execute(
                 prepare(service.delete(expenseItem))
-                        .doOnSubscribe(this::dismiss)
-                        .doOnCompleted(() -> {
+                        .doOnSubscribe(disposable -> dismiss())
+                        .doOnComplete(() -> {
                             progressScreen.toast(R.string.deleted, 1);
                             webScreen.update();
                         })
@@ -225,7 +153,7 @@ public class EditExpenseDialog extends BaseServiceDialog {
     private void doCreate(ExpenseItem expenseItem) {
         execute(
                 prepare(service.insert(expenseItem))
-                        .doOnCompleted(() -> {
+                        .doOnComplete(() -> {
                             dismiss();
                             progressScreen.toast(R.string.inserted, 1);
                             webScreen.update();
@@ -235,8 +163,8 @@ public class EditExpenseDialog extends BaseServiceDialog {
 
     private void doUpdate(ExpenseItem expenseItem, ExpenseItem original) {
         execute(prepare(service.update(expenseItem, original))
-                .doOnSubscribe(this::dismiss)
-                .doOnCompleted(() -> {
+                .doOnSubscribe(disposable -> this.dismiss())
+                .doOnComplete(() -> {
                     progressScreen.toast(R.string.updated, 1);
                     webScreen.update();
                 })
@@ -248,12 +176,9 @@ public class EditExpenseDialog extends BaseServiceDialog {
                 throwable -> progressScreen.error(throwable.getMessage()));
     }
 
-    private void onReceiptClicked() {
-        if (localReceiptFile == null) {
-            service.sendReceiptSelectEvent();
-        } else {
-            ReceiptDialog.show(getContext(), localReceiptFile);
-        }
+    private void execute(Completable o) {
+        o.subscribe(this::dismiss,
+                throwable -> progressScreen.error(throwable.getMessage()));
     }
 
     private static class EditExpenseDialogBuilder extends MaterialDialog.Builder {

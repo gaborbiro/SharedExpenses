@@ -1,15 +1,10 @@
 package com.gaborbiro.sharedexpenses.api;
 
-import android.content.IntentSender;
-import android.graphics.Bitmap;
-
 import com.gaborbiro.sharedexpenses.SpreadsheetException;
-import com.gaborbiro.sharedexpenses.model.StatItem;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
+import com.gaborbiro.sharedexpenses.model.StatItem;
 
 import java.io.IOException;
-
-import rx.Emitter;
 
 public interface ExpenseApi {
 
@@ -22,8 +17,6 @@ public interface ExpenseApi {
     void deleteExpense(ExpenseItem expense) throws Exception;
 
     String[] getTenantNames() throws IOException;
-
-    void uploadFile(Bitmap bmp, Emitter<IntentSender> callback);
 
     StatItem[] fetchStats() throws IOException, SpreadsheetException;
 }

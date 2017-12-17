@@ -1,17 +1,10 @@
 package com.gaborbiro.sharedexpenses.ui.activity;
 
 import android.annotation.SuppressLint;
-import android.content.ComponentName;
-import android.content.Intent;
 import android.content.IntentSender;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Parcelable;
-import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
@@ -30,17 +23,13 @@ import com.gaborbiro.sharedexpenses.BuildConfig;
 import com.gaborbiro.sharedexpenses.R;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
 import com.gaborbiro.sharedexpenses.model.StatItem;
-import com.gaborbiro.sharedexpenses.service.ReceiptEvent;
 import com.gaborbiro.sharedexpenses.ui.HtmlHelper;
-import com.gaborbiro.sharedexpenses.ui.fragment.StatsFragment;
 import com.gaborbiro.sharedexpenses.ui.dialog.EditExpenseDialog;
+import com.gaborbiro.sharedexpenses.ui.fragment.StatsFragment;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -92,11 +81,6 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
         fab.setOnClickListener(view -> EditExpenseDialog.show(MainActivity.this));
         update();
 
-        service.getReceiptEventBroadcast().subscribe(receiptEvent -> {
-            if (receiptEvent.type == ReceiptEvent.Type.SELECT) {
-                openImageIntent();
-            }
-        });
         statsButton.setOnClickListener(v -> StatsFragment.show(MainActivity.this, stats));
     }
 
@@ -147,7 +131,7 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
 
     private void fetchTenantNames() {
         prepare(service.getTenantNames())
-                .doOnNext(tenants -> appPrefs.setTenants(tenants))
+                .doOnSuccess(tenants -> appPrefs.setTenants(tenants))
                 .subscribe(tenants -> updateTenant());
     }
 
@@ -236,57 +220,5 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
         }
         title += " " + BuildConfig.VERSION_NAME;
         getSupportActionBar().setTitle(title);
-    }
-
-    private void openImageIntent() {
-        final File root = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES) + File.separator);
-        outputFileUri = Uri.fromFile(new File(root, "receipt"));
-
-        final List<Intent> cameraIntents = new ArrayList<>();
-        final Intent captureIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-        final PackageManager packageManager = getPackageManager();
-        final List<ResolveInfo> listCam = packageManager.queryIntentActivities(captureIntent, 0);
-
-        for (ResolveInfo res : listCam) {
-            final String packageName = res.activityInfo.packageName;
-            final Intent intent = new Intent(captureIntent);
-            intent.setComponent(new ComponentName(packageName, res.activityInfo.name));
-            intent.setPackage(packageName);
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
-            cameraIntents.add(intent);
-        }
-
-        final Intent galleryIntent = new Intent();
-        galleryIntent.setType("image/*");
-        galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
-
-        final Intent chooserIntent = Intent.createChooser(galleryIntent, "Select receipt image or make a photo");
-        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, cameraIntents.toArray(new Parcelable[cameraIntents.size()]));
-        startActivityForResult(chooserIntent, REQUEST_SELECT_RECEIPT);
-    }
-
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if (requestCode == REQUEST_SELECT_RECEIPT) {
-                final boolean isCamera;
-                if (data == null) {
-                    isCamera = true;
-                } else {
-                    final String action = data.getAction();
-                    isCamera = action != null && action.equals(MediaStore.ACTION_IMAGE_CAPTURE);
-                }
-
-                Uri selectedImageUri;
-                if (isCamera) {
-                    selectedImageUri = outputFileUri;
-                } else {
-                    selectedImageUri = data.getData();
-                }
-                service.sendReceiptSelectedEvent(selectedImageUri);
-            }
-        }
     }
 }

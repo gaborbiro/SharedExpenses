@@ -22,9 +22,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import io.reactivex.Single;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
-import rx.Observable;
 
 public abstract class GoogleApiActivity extends ProgressActivity implements GoogleApiScreen, EasyPermissions.PermissionCallbacks {
 
@@ -219,7 +219,7 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
     }
 
     @Override
-    protected <O> Observable<O> prepare(Observable<O> observable) {
+    protected <O> Single<O> prepare(Single<O> observable) {
         return super.prepare(observable).doOnError(throwable -> {
             if (throwable instanceof UserRecoverableAuthIOException) {
                 requestAuthorization(((UserRecoverableAuthIOException) throwable).getIntent());

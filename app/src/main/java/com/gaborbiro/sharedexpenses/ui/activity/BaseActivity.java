@@ -15,12 +15,9 @@ import javax.inject.Inject;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.plugins.RxJavaErrorHandler;
-import rx.plugins.RxJavaPlugins;
-import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
@@ -53,11 +50,10 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected abstract void inject();
 
-    protected <O> Observable<O> prepare(Observable<O> observable) {
+    protected <O> Single<O> prepare(Single<O> observable) {
         return observable
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .takeUntil(PublishSubject.create())
                 .doOnError(this::log);
     }
 

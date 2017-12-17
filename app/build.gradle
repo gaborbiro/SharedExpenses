@@ -1,19 +1,21 @@
 Properties versions = new Properties()
-versions.load(new FileInputStream("app/version.properties"))
+versions.load(new FileInputStream("$projectDir/version.properties"))
 
 apply plugin: 'com.android.application'
-apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion "26.0.2"
     defaultConfig {
         applicationId "com.gaborbiro.sharedexpenses"
-        minSdkVersion 21
-        targetSdkVersion 22
+        minSdkVersion 23
+        targetSdkVersion 23
         versionCode 1001
         versionName "1.1"
         vectorDrawables.generatedDensities = ['xxhdpi']
+        multiDexEnabled true
     }
     buildTypes {
         debug {
@@ -32,51 +34,60 @@ android {
             variant.outputs.each { output ->
                 def version = variant.versionName + "(" + variant.versionCode + ")"
                 def apkPostfix = "-" + version + ".apk"
-                output.outputFile = new File(
-                        output.outputFile.parent,
-                        output.outputFile.name.replace(".apk", apkPostfix))
+                output.outputFileName = output.outputFile.name.replace(".apk", apkPostfix)
             }
         }
     }
+
+    flavorDimensions "default"
+
     dexOptions {
-        javaMaxHeapSize "4g"
+        dexInProcess true
     }
     lintOptions {
         abortOnError false
         disable 'InvalidPackage'
     }
-    dataBinding {
-        enabled = true
-    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    packagingOptions {
+        exclude 'LICENSE.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/services/javax.annotation.processing.Processor'
+        exclude 'META-INF/rxjava.properties'
+    }
+}
+
+repositories {
+    jcenter()
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile "com.android.support:appcompat-v7:${versions.getProperty('SUPPORT_LIBRARY')}"
-    compile "com.android.support:design:${versions.getProperty('SUPPORT_LIBRARY')}"
-
-    compile "com.google.android.gms:play-services-auth:${versions.getProperty('PLAY_SERVICES')}"
-    compile 'pub.devrel:easypermissions:0.2.1'
-    compile('com.google.api-client:google-api-client-android:1.22.0') {
+    implementation "com.android.support:appcompat-v7:${versions.getProperty('SUPPORT_LIBRARY')}"
+    implementation "com.android.support:design:${versions.getProperty('SUPPORT_LIBRARY')}"
+    implementation "com.google.android.gms:play-services-drive:${versions.getProperty('PLAY_SERVICES')}"
+    implementation "com.google.android.gms:play-services-auth:${versions.getProperty('PLAY_SERVICES')}"
+    implementation 'pub.devrel:easypermissions:0.2.1'
+    implementation('com.google.api-client:google-api-client-android:1.22.0') {
         exclude group: 'org.apache.httpcomponents'
     }
-    compile('com.google.apis:google-api-services-sheets:v4-rev38-1.22.0') {
+    implementation('com.google.apis:google-api-services-sheets:v4-rev38-1.22.0') {
         exclude group: 'org.apache.httpcomponents'
     }
-    compile "com.google.android.gms:play-services-drive:${versions.getProperty('PLAY_SERVICES')}"
-    compile "io.reactivex:rxjava:${versions.getProperty('RXJAVA')}"
-    compile "io.reactivex:rxandroid:${versions.getProperty('RXANDROID')}"
-    compile "com.google.dagger:dagger:${versions.getProperty('DAGGER')}"
-    annotationProcessor "com.google.dagger:dagger-compiler:${versions.getProperty('DAGGER')}"
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
-    compile "com.jakewharton:butterknife:${versions.getProperty('BUTTERKNIFE')}"
-    annotationProcessor "com.jakewharton:butterknife-compiler:${versions.getProperty('BUTTERKNIFE')}"
-    compile 'com.afollestad.material-dialogs:core:0.9.1.0'
+    implementation "io.reactivex.rxjava2:rxjava:${versions.getProperty('RXJAVA')}"
+    implementation "io.reactivex.rxjava2:rxandroid:${versions.getProperty('RXANDROID')}"
+    implementation "com.google.dagger:dagger:${versions.getProperty('DAGGER')}"
+    kapt "com.google.dagger:dagger-compiler:${versions.getProperty('DAGGER')}"
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+    implementation "com.jakewharton:butterknife:${versions.getProperty('BUTTERKNIFE')}"
+    kapt "com.jakewharton:butterknife-compiler:${versions.getProperty('BUTTERKNIFE')}"
+    implementation 'com.afollestad.material-dialogs:core:0.9.1.0'
 
-    provided "org.projectlombok:lombok:1.16.14"
-    annotationProcessor "org.projectlombok:lombok:1.16.14"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 }

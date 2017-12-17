@@ -1,130 +1,85 @@
 package com.gaborbiro.sharedexpenses.service;
 
-import android.content.IntentSender;
-import android.graphics.Bitmap;
-import android.net.Uri;
-
 import com.gaborbiro.sharedexpenses.api.ExpenseApi;
-import com.gaborbiro.sharedexpenses.model.StatItem;
 import com.gaborbiro.sharedexpenses.model.ExpenseItem;
+import com.gaborbiro.sharedexpenses.model.StatItem;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import rx.Emitter;
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
+import io.reactivex.Completable;
+import io.reactivex.Single;
 
 @Singleton
 public class ExpensesService {
 
     @Inject ExpenseApi expenseApi;
-    private PublishSubject<ReceiptEvent> receiptEventBroadcast;
 
     @Inject
     public ExpensesService() {
-        receiptEventBroadcast = PublishSubject.create();
     }
 
-    public void sendReceiptSelectEvent() {
-        receiptEventBroadcast.onNext(ReceiptEvent.builder().type(ReceiptEvent.Type.SELECT).build());
+    public Single<ExpenseItem[]> getExpenses() {
+        return Single.create(emitter -> {
+                    try {
+                        emitter.onSuccess(expenseApi.fetchExpenses());
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    }
+                }
+        );
     }
 
-    public void sendReceiptDeletedEvent() {
-        receiptEventBroadcast.onNext(ReceiptEvent.builder().type(ReceiptEvent.Type.DELETED).build());
-    }
-
-    public void sendReceiptSelectedEvent(Uri receiptFileUri) {
-        receiptEventBroadcast.onNext(ReceiptEvent.builder().type(ReceiptEvent.Type.SELECTED).receiptUri(receiptFileUri).build());
-    }
-
-    public Observable<ReceiptEvent> getReceiptEventBroadcast() {
-        return receiptEventBroadcast.asObservable()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
-    }
-
-    public Observable<ExpenseItem[]> getExpenses() {
-        return Observable.create(emitter -> {
+    public Single<String[]> getTenantNames() {
+        return Single.create(emitter -> {
             try {
-                emitter.onNext(expenseApi.fetchExpenses());
+                emitter.onSuccess(expenseApi.getTenantNames());
             } catch (Exception e) {
                 emitter.onError(e);
-            } finally {
-                emitter.onCompleted();
             }
-        }, Emitter.BackpressureMode.NONE);
+        });
     }
 
-    public Observable<String[]> getTenantNames() {
-        return Observable.create(emitter -> {
-            try {
-                emitter.onNext(expenseApi.getTenantNames());
-            } catch (Exception e) {
-                emitter.onError(e);
-            } finally {
-                emitter.onCompleted();
-            }
-        }, Emitter.BackpressureMode.NONE);
-    }
-
-    public Observable<Void> delete(final ExpenseItem expense) {
-        return Observable.create(emitter -> {
+    public Completable delete(final ExpenseItem expense) {
+        return Completable.create(emitter -> {
             try {
                 expenseApi.deleteExpense(expense);
-                emitter.onCompleted();
+                emitter.onComplete();
             } catch (Exception e) {
                 emitter.onError(e);
             }
-        }, Emitter.BackpressureMode.NONE);
+        });
     }
 
-    public Observable<Void> insert(final ExpenseItem expense) {
-        return Observable.create(emitter -> {
+    public Completable insert(final ExpenseItem expense) {
+        return Completable.create(emitter -> {
             try {
                 expenseApi.insertExpense(expense);
-                emitter.onCompleted();
+                emitter.onComplete();
             } catch (Exception e) {
                 emitter.onError(e);
             }
-        }, Emitter.BackpressureMode.NONE);
+        });
     }
 
-    public Observable<IntentSender> uploadReceipt(Bitmap bmp) {
-        return Observable.create(
-                uriEmitter -> Observable.create(
-                        (Action1<Emitter<IntentSender>>) stringEmitter -> expenseApi.uploadFile(bmp, stringEmitter),
-                        Emitter.BackpressureMode.NONE
-                )
-                .subscribe(
-                        intentSender -> uriEmitter.onNext(intentSender),
-                        throwable -> uriEmitter.onError(new Exception("bad uri"))),
-                Emitter.BackpressureMode.NONE);
-    }
-
-    public Observable<Void> update(final ExpenseItem expense, final ExpenseItem original) {
-        return Observable.create(emitter -> {
+    public Completable update(final ExpenseItem expense, final ExpenseItem original) {
+        return Completable.create(emitter -> {
             try {
                 expenseApi.updateExpense(expense, original);
-                emitter.onCompleted();
+                emitter.onComplete();
             } catch (Exception e) {
                 emitter.onError(e);
             }
-        }, Emitter.BackpressureMode.NONE);
+        });
     }
 
-    public Observable<StatItem[]> getStats() {
-        return Observable.create(emitter -> {
+    public Single<StatItem[]> getStats() {
+        return Single.create(emitter -> {
             try {
-                emitter.onNext(expenseApi.fetchStats());
+                emitter.onSuccess(expenseApi.fetchStats());
             } catch (Exception e) {
                 emitter.onError(e);
-            } finally {
-                emitter.onCompleted();
             }
-        }, Emitter.BackpressureMode.NONE);
+        });
     }
 }

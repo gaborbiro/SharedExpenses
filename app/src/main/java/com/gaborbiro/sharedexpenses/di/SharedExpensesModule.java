@@ -4,6 +4,8 @@ import android.app.Application;
 import android.content.Context;
 
 import com.gaborbiro.sharedexpenses.App;
+import com.gaborbiro.sharedexpenses.api.CryptocurrencyApi;
+import com.gaborbiro.sharedexpenses.api.CryptocurrencyApiImpl;
 import com.gaborbiro.sharedexpenses.api.ExpenseApi;
 import com.gaborbiro.sharedexpenses.api.ExpenseApiImpl;
 import com.gaborbiro.sharedexpenses.ui.activity.GoogleApiScreen;
@@ -61,8 +63,8 @@ public class SharedExpensesModule {
 
     @Provides
     @Singleton
-    ExpenseApi provideExpenseApi(GoogleAccountCredential credential, Provider<GoogleApiClient> googleApiClientProvider) {
-        return new ExpenseApiImpl(credential, googleApiClientProvider);
+    ExpenseApi provideExpenseApi(GoogleAccountCredential credential) {
+        return new ExpenseApiImpl(credential);
     }
 
     @Provides

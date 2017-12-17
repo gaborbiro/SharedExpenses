@@ -7,7 +7,8 @@ import android.widget.Toast;
 
 import com.gaborbiro.sharedexpenses.ui.fragment.ProgressDialogFragment;
 
-import rx.Observable;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 
 public abstract class ProgressActivity extends BaseActivity implements ProgressScreen {
 
@@ -64,9 +65,9 @@ public abstract class ProgressActivity extends BaseActivity implements ProgressS
     }
 
     @Override
-    protected <O> Observable<O> prepare(Observable<O> observable) {
+    protected <O> Single<O> prepare(Single<O> observable) {
         return super.prepare(observable)
-                .doOnSubscribe(this::showProgress)
+                .doOnSubscribe(disposable -> this.showProgress())
                 .doAfterTerminate(this::hideProgress);
     }
 }
