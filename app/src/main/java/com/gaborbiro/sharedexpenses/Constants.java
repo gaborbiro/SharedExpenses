@@ -15,4 +15,5 @@ public class Constants {
     public static final String STATS_TABLE_RANGE = "2016-2017!G2:J4";
 
     public static final String CRYPTO_SPREADSHEET_ID = "1ixa58gR6nVGOyMTrLsnFBPUGKkF6h-Ov5XvVTj1uKRY";
+    public static final String CRYPTO_TABLE_RANGE = "Currencies!C2:C5";
 }

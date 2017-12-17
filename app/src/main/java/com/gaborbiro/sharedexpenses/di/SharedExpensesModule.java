@@ -18,7 +18,6 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 
 import java.util.Arrays;
 
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -65,6 +64,12 @@ public class SharedExpensesModule {
     @Singleton
     ExpenseApi provideExpenseApi(GoogleAccountCredential credential) {
         return new ExpenseApiImpl(credential);
+    }
+
+    @Provides
+    @Singleton
+    CryptocurrencyApi provideCryptocurrencyApi(GoogleAccountCredential credential) {
+        return new CryptocurrencyApiImpl(credential);
     }
 
     @Provides

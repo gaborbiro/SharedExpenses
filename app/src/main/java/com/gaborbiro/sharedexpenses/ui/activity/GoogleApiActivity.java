@@ -53,7 +53,7 @@ public abstract class GoogleApiActivity extends ProgressActivity implements Goog
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
                     public void onConnected(@Nullable Bundle bundle) {
-                        toast("GoogleApiClient connected");
+//                        toast("GoogleApiClient connected");
                     }
 
                     @Override

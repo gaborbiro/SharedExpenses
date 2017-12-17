@@ -3,7 +3,6 @@ package com.gaborbiro.sharedexpenses.ui.activity;
 import android.annotation.SuppressLint;
 import android.content.IntentSender;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -38,8 +37,6 @@ import butterknife.BindView;
 
 public class MainActivity extends GoogleApiActivity implements WebScreen {
 
-    private static final int REQUEST_SELECT_RECEIPT = 1;
-
     @Inject HtmlHelper htmlHelper;
 
     @BindView(R.id.webview) WebView webView;
@@ -48,8 +45,6 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
     private Map<Integer, ExpenseItem> expenses;
     private StatItem[] stats;
     private Snackbar snackbar;
-
-    private Uri outputFileUri;
 
     public class WebAppInterface {
 
@@ -111,12 +106,14 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
             if (snackbar != null) {
                 snackbar.dismiss();
             }
-            prepare(service.getExpenses())
+            prepare(expensesService.getExpenses())
                     .subscribe(expenseItems -> {
                         setContent(expenseItems);
                         fetchTenantNames();
                         fetchStats();
                     });
+            prepare(cryptocurrencyService.getCryptoGain())
+                    .subscribe(this::toast, throwable -> toast(throwable.getMessage()));
         }
     }
 
@@ -130,13 +127,13 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
     }
 
     private void fetchTenantNames() {
-        prepare(service.getTenantNames())
+        prepare(expensesService.getTenantNames())
                 .doOnSuccess(tenants -> appPrefs.setTenants(tenants))
                 .subscribe(tenants -> updateTenant());
     }
 
     private void fetchStats() {
-        prepare(service.getStats()).subscribe(stats -> {
+        prepare(expensesService.getStats()).subscribe(stats -> {
             MainActivity.this.stats = stats;
             statsButton.setVisibility(stats == null || stats.length == 0 ? View.GONE : View.VISIBLE);
         });
