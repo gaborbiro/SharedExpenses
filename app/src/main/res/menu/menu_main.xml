@@ -14,4 +14,9 @@
         android:title="@string/sort_by"
         android:icon="@drawable/ic_sort"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/action_skyrim"
+        android:orderInCategory="100"
+        android:title="Skyrim"
+        app:showAsAction="ifRoom|withText" />
 </menu>

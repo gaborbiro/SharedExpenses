@@ -112,8 +112,8 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
                         fetchTenantNames();
                         fetchStats();
                     });
-            prepare(cryptocurrencyService.getCryptoGain())
-                    .subscribe(this::toast, throwable -> toast(throwable.getMessage()));
+//            prepare(cryptocurrencyService.getCryptoGain())
+//                    .subscribe(this::toast, throwable -> toast(throwable.getMessage()));
         }
     }
 
@@ -164,6 +164,9 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
                 break;
             case R.id.action_refresh:
                 update();
+                break;
+            case R.id.action_skyrim:
+                SkyrimActivity.start(this);
                 break;
         }
         return super.onOptionsItemSelected(item);
