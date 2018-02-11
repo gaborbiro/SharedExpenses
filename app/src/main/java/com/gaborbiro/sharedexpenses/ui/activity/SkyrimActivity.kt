@@ -20,6 +20,7 @@ import com.gaborbiro.sharedexpenses.R
 import com.gaborbiro.sharedexpenses.util.Lce
 import com.gaborbiro.sharedexpenses.util.TextWatcherAdapter
 import com.gaborbiro.sharedexpenses.util.hide
+import com.gaborbiro.sharedexpenses.util.notNull
 import com.gaborbiro.sharedexpenses.util.show
 import com.google.common.collect.ImmutableList
 import io.reactivex.Observable
@@ -30,7 +31,6 @@ import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import kotlinx.android.synthetic.main.activity_skyrim.*
 import kotlinx.android.synthetic.main.content_skyrim.*
-
 
 class SkyrimActivity : AppCompatActivity() {
 
@@ -57,18 +57,18 @@ class SkyrimActivity : AppCompatActivity() {
 
         things_input.addTextChangedListener(object : TextWatcherAdapter() {
             override fun afterTextChanged(editable: Editable?) {
-                generate()
+                onInputUpdated()
             }
         })
         size_input.addTextChangedListener(object : TextWatcherAdapter() {
             override fun afterTextChanged(editable: Editable?) {
-                generate()
+                onInputUpdated()
             }
         })
         list.adapter = adapter
     }
 
-    private fun generate() {
+    private fun onInputUpdated() {
         val things = things_input.text.toString()
         val size = size_input.text.toString()
 
@@ -80,34 +80,7 @@ class SkyrimActivity : AppCompatActivity() {
                 subscription?.dispose()
                 currentThings = thingsArray
                 currentSize = sizeInt
-
-                subscription = Observable.create<Lce<Array<Permutation>>> { emitter ->
-                    emitter.onNext(Lce.loading(0))
-                    val collector = PublishSubject.create<Candidate>()
-                    val result = mutableListOf<Permutation>()
-                    Pair(currentThings, currentSize).notNull { things, size ->
-                        val target = Math.pow(things.size.toDouble(), size.toDouble()).toInt()
-                        collector
-                                .doOnComplete {
-                                    result.sortBy { it.duplicateCount }
-                                    emitter.onNext(Lce.content(result.toTypedArray()))
-                                    subscription = null
-                                }
-                                .subscribe {
-                                    val data: ImmutableList<String> = ImmutableList.copyOf(it.data.map { things[it] })
-                                    result.add(Permutation(false, data, it.longestRepeat()))
-
-                                    ((result.size / target.toDouble()) * 100).toInt().let {
-                                        if (it != lastProgress) {
-                                            lastProgress = it
-                                            emitter.onNext(Lce.loading(it))
-                                        }
-                                    }
-                                }
-                        permutate(Candidate(Array(size, { -1 })) , things.size, 0, collector)
-                        collector.onComplete()
-                    }
-                }
+                subscription = generate(thingsArray, sizeInt)
                         .subscribeOn(Schedulers.computation())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe {
@@ -125,8 +98,50 @@ class SkyrimActivity : AppCompatActivity() {
         }
     }
 
-    class Candidate(val data: Array<Int>) {
+    private fun generate(things: List<String>, size: Int): Observable<Lce<Array<Permutation>>> {
+        return Observable.create<Lce<Array<Permutation>>> { emitter ->
+            emitter.onNext(Lce.loading(0))
+            val collector = PublishSubject.create<Candidate>()
+            val result = mutableListOf<Permutation>()
+            Pair(things, size).notNull { things, size ->
+                val target = Math.pow(things.size.toDouble(), size.toDouble()).toInt()
+                collector
+                        .doOnComplete {
+                            result.sortBy { it.duplicateCount }
+                            emitter.onNext(Lce.content(result.toTypedArray()))
+                            subscription = null
+                        }
+                        .subscribe {
+                            val data: ImmutableList<String> = ImmutableList.copyOf(it.data.map { things[it] })
+                            result.add(Permutation(things = data, duplicateCount = it.longestRepeat()))
 
+                            ((result.size / target.toDouble()) * 100).toInt().let {
+                                if (it != lastProgress) {
+                                    lastProgress = it
+                                    emitter.onNext(Lce.loading(it))
+                                }
+                            }
+                        }
+                permutate(Candidate(size), things.size, collector)
+                collector.onComplete()
+            }
+        }
+    }
+
+    private fun permutate(candidate: Candidate, count: Int, emitter: Subject<Candidate>, index: Int = 0) {
+        while (candidate.data[index] < count - 1) {
+            candidate.inc(index)
+            if (index < candidate.data.size - 1) {
+                permutate(candidate, count, emitter, index + 1)
+            } else {
+                emitter.onNext(candidate)
+            }
+        }
+        candidate.clear(index)
+    }
+
+    class Candidate(size: Int) {
+        val data = Array(size, { -1 })
         private val occurrence = SparseIntArray()
 
         private fun mark(index: Int) {
@@ -150,46 +165,12 @@ class SkyrimActivity : AppCompatActivity() {
 
         fun longestRepeat(): Int {
             var max = 0
-            for (i in 0 until occurrence.size()) {
-                if (occurrence[i] > max) {
-                    max = occurrence[i]
-                }
-            }
+            (0 until occurrence.size())
+                    .asSequence()
+                    .filter { occurrence[it] > max }
+                    .forEach { max = occurrence[it] }
             return max
         }
-    }
-
-    private fun permutate(c: Candidate, count: Int, index: Int, emitter: Subject<Candidate>) {
-        while (c.data[index] < count - 1) {
-            c.inc(index)
-            if (index < c.data.size - 1) {
-                permutate(c, count, index + 1, emitter)
-            } else {
-                emitter.onNext(c)
-            }
-        }
-        c.clear(index)
-    }
-
-    private fun longestRepeat(sortedArray: Array<String>): Int {
-        var current: Any? = null
-        var maxRunLength = 0
-        var runLength = 0
-
-        sortedArray.forEach { item ->
-            current?.let {
-                if (it == item) {
-                    runLength++
-                    if (runLength > maxRunLength) {
-                        maxRunLength = runLength
-                    }
-                } else {
-                    runLength = 0
-                }
-            }
-            current = item
-        }
-        return maxRunLength
     }
 
     class SkyrimAdapter : RecyclerView.Adapter<PermutationVH>() {
@@ -221,8 +202,8 @@ class SkyrimActivity : AppCompatActivity() {
 
     class PermutationVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val container = itemView as LinearLayout
-        private val index: TextView = itemView.findViewById(R.id.index) as TextView
-        private val checked: CheckBox = itemView.findViewById(R.id.checked) as AppCompatCheckBox
+        private val index: TextView = itemView.findViewById<TextView>(R.id.index)
+        private val checked: CheckBox = itemView.findViewById<AppCompatCheckBox>(R.id.checked)
 
         fun bind(position: Int, data: Permutation, checkedChangeListener: CompoundButton.OnCheckedChangeListener) {
             checked.setOnCheckedChangeListener(null)
@@ -243,14 +224,9 @@ class SkyrimActivity : AppCompatActivity() {
         }
     }
 
-    class Permutation(var checked: Boolean, val things: ImmutableList<String>, val duplicateCount: Int) {
+    class Permutation(var checked: Boolean = false, val things: ImmutableList<String>, val duplicateCount: Int) {
         override fun toString(): String {
             return "$checked, $things"
         }
-    }
-
-    fun Pair<List<String>?, Int?>.notNull(action: (List<String>, Int) -> Unit) {
-        if (this.first != null && this.second != null)
-            action(this.first!!, this.second!!)
     }
 }
