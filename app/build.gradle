@@ -6,12 +6,12 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.0-beta2"
+    compileSdkVersion 27
+    buildToolsVersion "27.0.3"
     defaultConfig {
         applicationId "com.gaborbiro.sharedexpenses"
         minSdkVersion 23
-        targetSdkVersion 23
+        targetSdkVersion 27
         versionCode 1001
         versionName "1.1"
         vectorDrawables.generatedDensities = ['xxhdpi']
@@ -84,7 +84,7 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     implementation "com.jakewharton:butterknife:${versions.getProperty('BUTTERKNIFE')}"
     kapt "com.jakewharton:butterknife-compiler:${versions.getProperty('BUTTERKNIFE')}"
-    implementation 'com.afollestad.material-dialogs:core:0.9.1.0'
+    implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation 'com.rmtheis:tess-two:8.0.0'

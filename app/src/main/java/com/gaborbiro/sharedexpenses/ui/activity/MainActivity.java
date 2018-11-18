@@ -67,12 +67,12 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
         webView.setScrollbarFadingEnabled(true);
         webView.addJavascriptInterface(new WebAppInterface(), "android");
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         updateTitle();
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> EditExpenseDialog.show(MainActivity.this));
         update();
 
@@ -112,8 +112,6 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
                         fetchTenantNames();
                         fetchStats();
                     });
-//            prepare(cryptocurrencyService.getCryptoGain())
-//                    .subscribe(this::toast, throwable -> toast(throwable.getMessage()));
         }
     }
 
@@ -182,11 +180,11 @@ public class MainActivity extends GoogleApiActivity implements WebScreen {
 
     @Override
     public void error(String text) {
-        snackbar = Snackbar.make(findViewById(R.id.coordinator_layout), text, Snackbar.LENGTH_INDEFINITE)
+        snackbar = Snackbar.make(findViewById(R.id.container), text, Snackbar.LENGTH_INDEFINITE)
                 .setAction("REFRESH", v -> update());
         snackbar.setActionTextColor(Color.RED);
         View sbView = snackbar.getView();
-        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+        TextView textView = sbView.findViewById(android.support.design.R.id.snackbar_text);
         textView.setTextColor(Color.YELLOW);
         snackbar.addCallback(new Snackbar.Callback() {
             @Override

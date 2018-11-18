@@ -48,10 +48,7 @@
         android:layout_width="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/things_input"
-        app:layout_constraintTop_toBottomOf="@id/things_input">
-
-        <requestFocus/>
-    </EditText>
+        app:layout_constraintTop_toBottomOf="@id/things_input"/>
 
     <android.support.v7.widget.RecyclerView
         android:id="@android:id/list"

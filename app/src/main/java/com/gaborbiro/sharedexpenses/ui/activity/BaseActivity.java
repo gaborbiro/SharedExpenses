@@ -9,7 +9,6 @@ import android.widget.Toast;
 import com.gaborbiro.sharedexpenses.App;
 import com.gaborbiro.sharedexpenses.AppPrefs;
 import com.gaborbiro.sharedexpenses.UserPrefs;
-import com.gaborbiro.sharedexpenses.service.CryptocurrencyService;
 import com.gaborbiro.sharedexpenses.service.ExpensesService;
 
 import javax.inject.Inject;
@@ -26,7 +25,6 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     @Inject protected App app;
     @Inject ExpensesService expensesService;
-    @Inject CryptocurrencyService cryptocurrencyService;
     @Inject protected UserPrefs userPrefs;
     @Inject protected AppPrefs appPrefs;
 
