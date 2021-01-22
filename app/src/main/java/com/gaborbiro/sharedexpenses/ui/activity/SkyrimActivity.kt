@@ -109,7 +109,7 @@ class SkyrimActivity : AppCompatActivity() {
             val collector = PublishSubject.create<Candidate>()
             val result = mutableListOf<Permutation>()
             Pair(things, size).notNull { things, size ->
-                val target = Math.pow(things.size.toDouble(), size.toDouble()).toInt()
+                val target = Math.pow(things.size.toDouble(), size.toDouble())
                 collector
                         .doOnComplete {
                             result.sortBy { it.duplicateCount }
@@ -120,7 +120,7 @@ class SkyrimActivity : AppCompatActivity() {
                             val data: ImmutableList<String> = ImmutableList.copyOf(it.data.map { things[it] })
                             result.add(Permutation(things = data, duplicateCount = it.longestRepeat()))
 
-                            ((result.size / target.toDouble()) * 100).toInt().let {
+                            ((result.size / target) * 100).toInt().let {
                                 if (it != lastProgress) {
                                     lastProgress = it
                                     emitter.onNext(Lce.loading(it))

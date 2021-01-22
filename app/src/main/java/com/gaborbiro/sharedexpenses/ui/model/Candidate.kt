@@ -3,7 +3,7 @@ package com.gaborbiro.sharedexpenses.ui.model
 import android.util.SparseIntArray
 
 class Candidate(size: Int) {
-    val data = Array(size, { -1 })
+    val data = Array(size) { -1 }
     private val occurrence = SparseIntArray()
 
     private fun mark(index: Int) {
